@@ -80,6 +80,9 @@ export default function VideoScrubHero({
             playsInline
             preload="auto"
             poster={poster}
+            // Helps Safari treat this as scrubbable media
+            disablePictureInPicture
+            disableRemotePlayback
           />
         </div>
 

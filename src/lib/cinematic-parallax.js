@@ -69,32 +69,57 @@ export function createVideoScrubHero(opts) {
   let ready = false;
   let destroyed = false;
   let lastApplied = -1;
-  let seeking = false;
-  /** @type {number|null} */
-  let pendingSeek = null;
+  /** @type {number} */
+  let desiredTime = 0;
+  let seekRaf = 0;
+  let seekStartedAt = 0;
+  const SEEK_STUCK_MS = 180;
 
+  function clampTime(t) {
+    const duration = video.duration;
+    if (!Number.isFinite(duration) || duration <= 0) return 0;
+    return Math.min(Math.max(0, t), Math.max(0, duration - 0.05));
+  }
+
+  /**
+   * Robust scrub seek:
+   * - coalesce to one seek per frame
+   * - never hard-lock forever if `seeked` never fires (CDN / sparse keyframes)
+   */
   function flushSeek(t) {
-    pendingSeek = t;
-    if (seeking) return;
-    const cur = video.currentTime;
-    if (Math.abs(cur - t) < 0.008) {
-      pendingSeek = null;
-      return;
-    }
-    seeking = true;
-    try {
-      video.currentTime = t;
-    } catch {
-      seeking = false;
-    }
+    desiredTime = clampTime(t);
+    if (seekRaf) return;
+
+    seekRaf = requestAnimationFrame(() => {
+      seekRaf = 0;
+      if (destroyed) return;
+
+      const now = performance.now();
+      const stuck = video.seeking && seekStartedAt > 0 && now - seekStartedAt > SEEK_STUCK_MS;
+      if (video.seeking && !stuck) {
+        seekRaf = requestAnimationFrame(() => {
+          seekRaf = 0;
+          flushSeek(desiredTime);
+        });
+        return;
+      }
+
+      if (Math.abs(video.currentTime - desiredTime) < 0.04) return;
+
+      try {
+        seekStartedAt = performance.now();
+        video.currentTime = desiredTime;
+      } catch {
+        seekStartedAt = 0;
+      }
+    });
   }
 
   function onSeeked() {
-    seeking = false;
-    if (pendingSeek == null) return;
-    const next = pendingSeek;
-    pendingSeek = null;
-    flushSeek(next);
+    seekStartedAt = 0;
+    if (Math.abs(video.currentTime - desiredTime) >= 0.04) {
+      flushSeek(desiredTime);
+    }
   }
 
   video.addEventListener("seeked", onSeeked);
@@ -107,8 +132,6 @@ export function createVideoScrubHero(opts) {
 
       if (p >= from && p <= to) {
         const span = Math.max(0.0001, to - from);
-        // Soft crossfade at edges — but NOT at scroll start (from=0) or end (to≈1),
-        // so the first frame already shows the opening line.
         const fade = Math.min(0.07, span / 2);
         const fadeIn = from <= 0 ? 0 : fade;
         const fadeOut = to >= 0.99 ? 0 : fade;
@@ -132,14 +155,12 @@ export function createVideoScrubHero(opts) {
     const duration = video.duration;
     if (!Number.isFinite(duration) || duration <= 0) return;
 
-    // Scrub real video — butter-smooth vs JPEG frame sequence
-    const t = p * Math.max(0, duration - 0.04);
-    if (Math.abs(t - lastApplied) > 0.004) {
+    const t = p * Math.max(0, duration - 0.05);
+    if (Math.abs(t - lastApplied) > 0.01) {
       lastApplied = t;
       flushSeek(t);
     }
 
-    // Parallax depth: video slowly zooms + drifts; copy counters
     if (videoLayer) {
       const scale = 1 + p * videoScale;
       const y = p * -40;
@@ -196,6 +217,7 @@ export function createVideoScrubHero(opts) {
   io.observe(section);
 
   function onReady() {
+    if (ready || destroyed) return;
     ready = true;
     video.pause();
     video.loop = false;
@@ -209,10 +231,13 @@ export function createVideoScrubHero(opts) {
     ensureTick();
   }
 
-  if (video.readyState >= 1) onReady();
-  else video.addEventListener("loadedmetadata", onReady, { once: true });
+  if (video.readyState >= 3) onReady();
+  else {
+    video.addEventListener("loadeddata", onReady, { once: true });
+    video.addEventListener("canplay", onReady, { once: true });
+    video.addEventListener("loadedmetadata", onReady, { once: true });
+  }
 
-  // Unlock precise seeking on mobile Safari / Chrome: muted play then pause once
   video.muted = true;
   video.playsInline = true;
   video.preload = "auto";
@@ -230,7 +255,6 @@ export function createVideoScrubHero(opts) {
     video.pause();
   }
 
-  // Never let it free-play — scrub owns the timeline
   video.addEventListener("play", () => {
     if (ready) video.pause();
   });
@@ -246,6 +270,7 @@ export function createVideoScrubHero(opts) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
+      if (seekRaf) cancelAnimationFrame(seekRaf);
     },
   };
 }
@@ -279,7 +304,6 @@ export function createMomentParallax(opts = {}) {
   moments.forEach((el) => {
     const video = /** @type {HTMLVideoElement|null} */ (el.querySelector("video"));
     if (video) {
-      // Prefer data-src-desktop / data-src-mobile; fall back to existing <source>
       const desk = video.dataset.srcDesktop;
       const mob = video.dataset.srcMobile;
       if (desk || mob) {
@@ -309,7 +333,6 @@ export function createMomentParallax(opts = {}) {
             if (p && typeof p.catch === "function") p.catch(() => {});
           }
         } else if (!entry.isIntersecting) {
-          // Allow replay next time they scroll back
           s.played = false;
           s.video.pause();
         }
@@ -332,7 +355,6 @@ export function createMomentParallax(opts = {}) {
         const s = state.get(el);
         if (!s) return;
         const rect = el.getBoundingClientRect();
-        // -1 when below, 0 centered, +1 when above
         const mid = (rect.top + rect.height / 2 - vh / 2) / vh;
         const y = mid * strength;
         if (s.media) s.media.style.transform = `translate3d(0, ${y * 0.55}px, 0) scale(1.06)`;
