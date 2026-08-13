@@ -107,6 +107,24 @@
       display: block;
     }
 
+    /* Autoplay: hold on poster until enough is buffered, then fade in */
+    .hero.hero--auto .hero__video,
+    .hero.hero--auto .hero__video-layer video {
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    .hero.hero--auto.is-ready .hero__video,
+    .hero.hero--auto.is-ready .hero__video-layer video {
+      opacity: 1;
+    }
+
+    /* Boot video already on screen — keep visible while React adopts it */
+    .hero.hero--auto .hero__video-layer > video[src],
+    .hero.hero--auto .hero__video-layer > video:not([src=""]) {
+      opacity: 1;
+    }
+
     /* Darker center wash so hero copy stays readable on bright frames */
     .hero__veil {
       position: absolute;

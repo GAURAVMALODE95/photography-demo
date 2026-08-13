@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { chapters } from "../data/content.jsx";
 
 const MOBILE_MAX = 900;
@@ -17,81 +17,220 @@ function easeInOut(t) {
 }
 
 /**
+ * Reuse the boot <video id="hero-early-video"> so we never download twice.
+ */
+function adoptEarlyVideo(host) {
+  if (typeof document === "undefined" || !host) return null;
+  const early =
+    window.__HERO_EARLY_VIDEO || document.getElementById("hero-early-video");
+  if (!early || !(early instanceof HTMLVideoElement)) return null;
+
+  early.className = "hero__video";
+  early.removeAttribute("id");
+  host.appendChild(early);
+  document.documentElement.classList.add("hero-adopted");
+  window.__HERO_EARLY_VIDEO = early;
+  return early;
+}
+
+/**
  * Same hero UI — video autoplays at normal speed.
- * Chapter text cycles on its own slower, readable timer (4 lines).
+ * Boot video from index.html is adopted (already loading / playing).
  */
 export default function AutoPlayHero({
   videoSrcDesktop = "/media/scrub.mp4",
-  videoSrcMobile = "/media/scrub-mobile-cover.mp4",
+  videoSrcMobile = "/media/scrub-mobile-auto.mp4",
   poster = "/media/posters/01.jpg",
 }) {
+  const hostRef = useRef(null);
   const videoRef = useRef(null);
   const progressRef = useRef(null);
   const chapterRefs = useRef([]);
+  const adoptedRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth <= MOBILE_MAX : false
   );
-  const [videoSrc, setVideoSrc] = useState(() =>
-    pickSrc(videoSrcDesktop, videoSrcMobile)
-  );
+  const [ready, setReady] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const v =
+      window.__HERO_EARLY_VIDEO || document.getElementById("hero-early-video");
+    return !!(v && v.readyState >= 2);
+  });
 
+  // Adopt early video before paint so React never covers it with a blank hero
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host || adoptedRef.current) return;
+
+    const expected = pickSrc(videoSrcDesktop, videoSrcMobile);
+    let video = adoptEarlyVideo(host);
+
+    if (!video) {
+      video = document.createElement("video");
+      video.className = "hero__video";
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("webkit-playsinline", "");
+      video.autoplay = true;
+      video.loop = true;
+      video.preload = "auto";
+      video.poster = poster;
+      video.setAttribute("disablePictureInPicture", "");
+      video.src = expected;
+      host.appendChild(video);
+      try {
+        video.load();
+      } catch {
+        /* ignore */
+      }
+    }
+
+    videoRef.current = video;
+    adoptedRef.current = true;
+    setIsMobile(window.innerWidth <= MOBILE_MAX);
+  }, [videoSrcDesktop, videoSrcMobile, poster]);
+
+  // Breakpoint resize — swap source only if needed
   useEffect(() => {
-    const sync = () => {
+    const onResize = () => {
       setIsMobile(window.innerWidth <= MOBILE_MAX);
-      setVideoSrc(pickSrc(videoSrcDesktop, videoSrcMobile));
+      const video = videoRef.current;
+      if (!video) return;
+      const next = pickSrc(videoSrcDesktop, videoSrcMobile);
+      const current = video.getAttribute("src") || video.currentSrc || "";
+      if (current.includes(next) || current.endsWith(next)) return;
+      video.src = next;
+      window.__HERO_VIDEO_HREF = next;
+      try {
+        video.load();
+      } catch {
+        /* ignore */
+      }
+      video.play()?.catch(() => {});
     };
-    sync();
-    window.addEventListener("resize", sync);
-    return () => window.removeEventListener("resize", sync);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, [videoSrcDesktop, videoSrcMobile]);
 
-  // Video: autoplay + loop (unchanged pace). Progress bar follows video only.
+  // Playback + progress
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
     let raf = 0;
     let active = true;
+    let started = false;
+    let tries = 0;
 
-    const tick = () => {
-      if (!active) return;
-      const duration = video.duration;
-      if (Number.isFinite(duration) && duration > 0 && progressRef.current) {
-        const p = Math.min(1, Math.max(0, video.currentTime / duration));
-        progressRef.current.style.transform = `scaleX(${p})`;
+    const attach = () => {
+      const video = videoRef.current;
+      if (!video) {
+        if (tries++ < 40) raf = requestAnimationFrame(attach);
+        return;
       }
-      raf = requestAnimationFrame(tick);
+
+      setReady(false);
+
+      const tick = () => {
+        if (!active) return;
+        const duration = video.duration;
+        if (Number.isFinite(duration) && duration > 0 && progressRef.current) {
+          const p = Math.min(1, Math.max(0, video.currentTime / duration));
+          progressRef.current.style.transform = `scaleX(${p})`;
+        }
+        raf = requestAnimationFrame(tick);
+      };
+
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.loop = true;
+      video.preload = "auto";
+
+      const play = () => {
+        const p = video.play();
+        if (p && typeof p.catch === "function") p.catch(() => {});
+      };
+
+      const hasEnoughBuffer = () => {
+        const duration = video.duration;
+        if (!Number.isFinite(duration) || duration <= 0) return false;
+        if (video.readyState >= 3) return true;
+        try {
+          for (let i = 0; i < video.buffered.length; i++) {
+            if (
+              video.buffered.start(i) <= 0.15 &&
+              video.buffered.end(i) >= duration * 0.6
+            ) {
+              return true;
+            }
+          }
+        } catch {
+          /* ignore */
+        }
+        return false;
+      };
+
+      const tryStart = () => {
+        if (!active || started) return;
+        if (!hasEnoughBuffer() && video.readyState < 2) return;
+        started = true;
+        setReady(true);
+        play();
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(tick);
+      };
+
+      const onProgress = () => tryStart();
+      const onCanPlay = () => tryStart();
+      const onLoadedData = () => tryStart();
+
+      video.addEventListener("progress", onProgress);
+      video.addEventListener("canplay", onCanPlay);
+      video.addEventListener("loadeddata", onLoadedData);
+
+      // Already playing from boot?
+      if (!video.paused && video.readyState >= 2) {
+        started = true;
+        setReady(true);
+        raf = requestAnimationFrame(tick);
+      } else {
+        tryStart();
+      }
+
+      const fallback = window.setTimeout(() => {
+        if (!active || started) return;
+        started = true;
+        setReady(true);
+        play();
+        raf = requestAnimationFrame(tick);
+      }, 2500);
+
+      const onVisibility = () => {
+        if (document.hidden) video.pause();
+        else if (started) play();
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+
+      return () => {
+        window.clearTimeout(fallback);
+        video.removeEventListener("progress", onProgress);
+        video.removeEventListener("canplay", onCanPlay);
+        video.removeEventListener("loadeddata", onLoadedData);
+        document.removeEventListener("visibilitychange", onVisibility);
+      };
     };
 
-    video.muted = true;
-    video.playsInline = true;
-    video.loop = true;
-    video.preload = "auto";
-
-    const play = () => {
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    };
-
-    play();
-    raf = requestAnimationFrame(tick);
-
-    const onVisibility = () => {
-      if (document.hidden) video.pause();
-      else play();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
+    const cleanupAttach = attach();
 
     return () => {
       active = false;
       cancelAnimationFrame(raf);
-      document.removeEventListener("visibilitychange", onVisibility);
-      video.pause();
+      if (typeof cleanupAttach === "function") cleanupAttach();
     };
-  }, [videoSrc]);
+  }, []);
 
-  // Text: slow readable cycle — independent of video speed
+  // Text cycle
   useEffect(() => {
     const total = chapters.length;
     if (!total) return;
@@ -110,7 +249,6 @@ export default function AutoPlayHero({
       });
     };
 
-    // Show first chapter immediately
     paint(0, 1);
 
     const tick = (now) => {
@@ -121,11 +259,9 @@ export default function AutoPlayHero({
       const local = elapsed - index * CHAPTER_HOLD_MS;
 
       let opacity = 1;
-      // Fade in at start of each slide
       if (local < CHAPTER_FADE_MS) {
         opacity = easeInOut(local / CHAPTER_FADE_MS);
       }
-      // Fade out near the end (except we crossfade into next via next slide's fade-in)
       const fadeOutStart = CHAPTER_HOLD_MS - CHAPTER_FADE_MS;
       if (local > fadeOutStart) {
         opacity = easeInOut(1 - (local - fadeOutStart) / CHAPTER_FADE_MS);
@@ -145,26 +281,11 @@ export default function AutoPlayHero({
 
   return (
     <section
-      className={`hero hero--auto${isMobile ? " hero--mobile" : ""}`}
+      className={`hero hero--auto${isMobile ? " hero--mobile" : ""}${ready ? " is-ready" : ""}`}
       aria-label="Cinematic opening"
     >
       <div className="hero__sticky">
-        <div className="hero__video-layer">
-          <video
-            key={videoSrc}
-            ref={videoRef}
-            className="hero__video"
-            src={videoSrc}
-            muted
-            playsInline
-            autoPlay
-            loop
-            preload="auto"
-            poster={poster}
-            disablePictureInPicture
-            disableRemotePlayback
-          />
-        </div>
+        <div className="hero__video-layer" ref={hostRef} />
 
         <div className="hero__veil" aria-hidden="true" />
 

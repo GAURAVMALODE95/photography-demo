@@ -4,31 +4,169 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your Studio</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!--
+      On homepage: VIDEO FIRST — before fonts, CSS, React, or chat.
+      On other routes: skip video boot and load the app normally.
+    -->
+    <script>
+      (function () {
+        var path = location.pathname || "/";
+        window.__IS_HOME =
+          path === "/" || path === "/index.html" || path === "";
+
+        var mobile = window.matchMedia("(max-width: 900px)").matches;
+        window.__HERO_VIDEO_HREF = mobile
+          ? "/media/scrub-mobile-auto.mp4"
+          : "/media/scrub.mp4";
+
+        window.__loadSiteFonts = function () {
+          if (window.__fontsLoading) return;
+          window.__fontsLoading = true;
+          var p1 = document.createElement("link");
+          p1.rel = "preconnect";
+          p1.href = "https://fonts.googleapis.com";
+          var p2 = document.createElement("link");
+          p2.rel = "preconnect";
+          p2.href = "https://fonts.gstatic.com";
+          p2.crossOrigin = "";
+          var sheet = document.createElement("link");
+          sheet.rel = "stylesheet";
+          sheet.href =
+            "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&display=swap";
+          document.head.appendChild(p1);
+          document.head.appendChild(p2);
+          document.head.appendChild(sheet);
+        };
+
+        if (!window.__IS_HOME) {
+          window.__loadSiteFonts();
+        } else {
+          setTimeout(function () {
+            if (window.__loadSiteFonts) window.__loadSiteFonts();
+          }, 2500);
+        }
+      })();
+    </script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #0c0a09;
+      }
+      #hero-early-video {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center center;
+        z-index: 2;
+        background: #0c0a09 url("/media/posters/01.jpg") center / cover no-repeat;
+        pointer-events: none;
+      }
+      #root {
+        position: relative;
+        z-index: 1;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <video
+      id="hero-early-video"
+      muted
+      playsinline
+      webkit-playsinline
+      autoplay
+      loop
+      preload="auto"
+      poster="/media/posters/01.jpg"
+      fetchpriority="high"
+      disablepictureinpicture
+      hidden
+    ></video>
+    <script>
+      (function () {
+        var v = document.getElementById("hero-early-video");
+        if (!v) return;
 
-    <!--Start of Tawk.to Script-->
+        if (!window.__IS_HOME) {
+          v.remove();
+          window.__HERO_EARLY_VIDEO = null;
+          return;
+        }
+
+        v.hidden = false;
+        window.__HERO_EARLY_VIDEO = v;
+        v.muted = true;
+        v.defaultMuted = true;
+        v.playsInline = true;
+        v.setAttribute("playsinline", "");
+        v.setAttribute("webkit-playsinline", "");
+        v.preload = "auto";
+        v.src = window.__HERO_VIDEO_HREF;
+        try {
+          v.load();
+        } catch (e) {}
+        var play = v.play();
+        if (play && play.catch) play.catch(function () {});
+
+        function onUsable() {
+          if (window.__loadSiteFonts) window.__loadSiteFonts();
+        }
+        v.addEventListener("loadeddata", onUsable, { once: true });
+        v.addEventListener("canplay", onUsable, { once: true });
+      })();
+    </script>
+
+    <div id="root"></div>
+    <script type="module">
+      (function () {
+        var booted = false;
+        function bootApp() {
+          if (booted) return;
+          booted = true;
+          import("/src/main.jsx");
+        }
+
+        if (!window.__IS_HOME) {
+          bootApp();
+          return;
+        }
+
+        var v = document.getElementById("hero-early-video");
+        if (v) {
+          v.addEventListener("loadstart", bootApp, { once: true });
+          v.addEventListener("progress", bootApp, { once: true });
+          v.addEventListener("loadeddata", bootApp, { once: true });
+        }
+        setTimeout(bootApp, 700);
+      })();
+    </script>
+
     <script type="text/javascript">
       var Tawk_API = Tawk_API || {},
         Tawk_LoadStart = new Date();
       (function () {
-        var s1 = document.createElement("script"),
-          s0 = document.getElementsByTagName("script")[0];
-        s1.async = true;
-        s1.src = "https://embed.tawk.to/6a6ec413be39691d4f4b3ccb/1jv0arr9m";
-        s1.charset = "UTF-8";
-        s1.setAttribute("crossorigin", "*");
-        s0.parentNode.insertBefore(s1, s0);
+        function loadTawk() {
+          var s1 = document.createElement("script"),
+            s0 = document.getElementsByTagName("script")[0];
+          s1.async = true;
+          s1.src = "https://embed.tawk.to/6a6ec413be39691d4f4b3ccb/1jv0arr9m";
+          s1.charset = "UTF-8";
+          s1.setAttribute("crossorigin", "*");
+          s0.parentNode.insertBefore(s1, s0);
+        }
+        function whenIdle(fn) {
+          if ("requestIdleCallback" in window) {
+            requestIdleCallback(fn, { timeout: 8000 });
+          } else {
+            setTimeout(fn, 5000);
+          }
+        }
+        window.addEventListener("load", function () {
+          whenIdle(loadTawk);
+        });
       })();
     </script>
-    <!--End of Tawk.to Script-->
   </body>
 </html>
