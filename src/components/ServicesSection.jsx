@@ -33,11 +33,6 @@ export default function ServicesSection() {
                 <p>{s.body}</p>
               </div>
 
-              <span className="service-card__arrow" aria-hidden="true">
-                ↗
-              </span>
-
-              <div className="service-card__shine" aria-hidden="true" />
               <div className="service-card__glow" aria-hidden="true" />
             </div>
           </article>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createVideoScrubHero } from "../lib/cinematic-parallax.js";
 import { chapters } from "../data/content.jsx";
 
-const MOBILE_MAX = 767;
+const MOBILE_MAX = 900;
 
 function pickScrubSrc(desktopSrc, mobileSrc) {
   if (typeof window === "undefined") return desktopSrc;
@@ -11,11 +11,11 @@ function pickScrubSrc(desktopSrc, mobileSrc) {
 
 /**
  * Sticky scroll-scrubbed video hero with layered parallax copy.
- * Desktop: 1440p scrub · Mobile: 1080p scrub
+ * Desktop: landscape full-bleed · Mobile: portrait full-bleed (100svh cover)
  */
 export default function VideoScrubHero({
   videoSrcDesktop = "/media/scrub.mp4",
-  videoSrcMobile = "/media/scrub-mobile.mp4",
+  videoSrcMobile = "/media/scrub-mobile-cover.mp4",
   poster = "/media/posters/01.jpg",
   smoothing = 0.16,
   videoScale = 0.14,
@@ -27,12 +27,19 @@ export default function VideoScrubHero({
   const copyRef = useRef(null);
   const progressRef = useRef(null);
 
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth <= MOBILE_MAX : false
+  );
   const [videoSrc, setVideoSrc] = useState(() =>
     pickScrubSrc(videoSrcDesktop, videoSrcMobile)
   );
 
   useEffect(() => {
-    const sync = () => setVideoSrc(pickScrubSrc(videoSrcDesktop, videoSrcMobile));
+    const sync = () => {
+      const mobile = window.innerWidth <= MOBILE_MAX;
+      setIsMobile(mobile);
+      setVideoSrc(pickScrubSrc(videoSrcDesktop, videoSrcMobile));
+    };
     sync();
     window.addEventListener("resize", sync);
     return () => window.removeEventListener("resize", sync);
@@ -48,21 +55,26 @@ export default function VideoScrubHero({
       copyLayer: copyRef.current,
       progressFill: progressRef.current,
       chapters: sectionRef.current.querySelectorAll("[data-chapter]"),
-      smoothing,
-      videoScale,
-      copyShift,
+      smoothing: isMobile ? Math.min(smoothing, 0.2) : smoothing,
+      videoScale: isMobile ? 0.06 : videoScale,
+      copyShift: isMobile ? 28 : copyShift,
     });
 
     return () => instance.destroy();
-  }, [smoothing, videoScale, copyShift, videoSrc]);
+  }, [smoothing, videoScale, copyShift, videoSrc, isMobile]);
 
   return (
-    <section className="hero" ref={sectionRef} aria-label="Cinematic opening">
+    <section
+      className={`hero${isMobile ? " hero--mobile" : ""}`}
+      ref={sectionRef}
+      aria-label="Cinematic opening"
+    >
       <div className="hero__sticky">
         <div className="hero__video-layer" ref={videoLayerRef}>
           <video
             key={videoSrc}
             ref={videoRef}
+            className="hero__video"
             src={videoSrc}
             muted
             playsInline
@@ -101,6 +113,7 @@ export default function VideoScrubHero({
           <div className="hero__hint-mouse">
             <span className="hero__hint-wheel" />
           </div>
+          <div className="hero__hint-touch" />
           <span className="hero__hint-label">Explore</span>
           <svg
             className="hero__hint-chevrons"

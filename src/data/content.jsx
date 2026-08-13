@@ -1,14 +1,16 @@
-/** Hero chapter copy — photography site voice */
+/** Hero chapter copy — simple wedding English for Indian clients */
 export const chapters = [
   {
     from: 0,
     to: 0.18,
     title: (
       <>
-        Moments that <em>linger</em>
+        Your wedding,
+        <br />
+        <em>remembered</em>
       </>
     ),
-    body: "Quiet glances. Soft light. The kind of frames you return to for a lifetime.",
+    body: "Real smiles. Soft light. Photos you’ll love looking at for years.",
     as: "h1",
   },
   {
@@ -16,10 +18,12 @@ export const chapters = [
     to: 0.38,
     title: (
       <>
-        Love, in real <em>time</em>
+        Love, as it
+        <br />
+        <em>happens</em>
       </>
     ),
-    body: "We follow the day as it unfolds — honest, unhurried, and deeply felt.",
+    body: "From varmala to pheras — we follow your day, gently and honestly.",
     as: "h2",
   },
   {
@@ -27,10 +31,12 @@ export const chapters = [
     to: 0.58,
     title: (
       <>
-        Details you’ll <em>keep</em>
+        Little details
+        <br />
+        that <em>matter</em>
       </>
     ),
-    body: "Hands meeting. Petals in the air. The little things that make it yours.",
+    body: "Mehendi, jewellery, quiet glances — the small things you’ll miss later.",
     as: "h2",
   },
   {
@@ -38,10 +44,12 @@ export const chapters = [
     to: 0.78,
     title: (
       <>
-        Stories told in <em>light</em>
+        Films made
+        <br />
+        with <em>heart</em>
       </>
     ),
-    body: "Cinematic films and photographs shaped by emotion, not just the schedule.",
+    body: "Beautiful wedding films that feel like your story, not just highlights.",
     as: "h2",
   },
   {
@@ -49,10 +57,12 @@ export const chapters = [
     to: 1.01,
     title: (
       <>
-        Your day, <em>remembered</em>
+        So you never
+        <br />
+        forget this <em>day</em>
       </>
     ),
-    body: "So years from now, it still feels like you were right there.",
+    body: "Years from now, it should still feel like you were right there.",
     as: "h2",
   },
 ];
