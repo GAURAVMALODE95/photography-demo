@@ -1,14 +1,11 @@
 @import "tailwindcss";
+@import "./styles/colors.css";
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --ink: #0c0a09;
-      --paper: #f3ebe1;
-      --gold: #c9a66b;
-      --muted: rgba(243, 235, 225, 0.62);
-      --font-display: "Cormorant Garamond", Georgia, serif;
-      --font-body: "Outfit", system-ui, sans-serif;
+      --font-display: "Cormorant Garamond";
+      --font-body: "Outfit";
     }
 
     html { scroll-behavior: auto; }
@@ -19,6 +16,15 @@
       color: var(--paper);
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
+    }
+
+    /* No text paint until FontFace boot confirms originals */
+    html.fonts-pending body :is(
+      h1, h2, h3, h4, h5, h6, p, a, span, li, button, label, nav, em, strong, small
+    ) {
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow: none !important;
     }
 
     /* Hide native cursor when custom photography cursor is active */
@@ -158,6 +164,18 @@
       will-change: transform;
     }
 
+    /* Avoid any substitute font flash before Cormorant / Outfit load */
+    .hero.hero--auto .hero__copy {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    html.fonts-ready .hero.hero--auto .hero__copy {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.35s ease;
+    }
+
     .chapter {
       position: absolute;
       inset: 0;
@@ -192,7 +210,7 @@
     .chapter h2 em {
       font-style: italic;
       font-weight: 400;
-      color: #f3dfb3;
+      color: var(--gold-light);
       letter-spacing: -0.02em;
     }
 
@@ -410,7 +428,7 @@
       .chapter h1,
       .chapter h2 {
         font-size: clamp(3.15rem, 13.5vw, 4.4rem);
-        font-weight: 600;
+        font-weight: 500;
         line-height: 0.92;
         letter-spacing: -0.035em;
         max-width: 10ch;
@@ -424,8 +442,8 @@
 
       .chapter h1 em,
       .chapter h2 em {
-        color: #ffe7b0;
-        font-weight: 500;
+        color: var(--gold-bright);
+        font-weight: 400;
         text-shadow:
           0 0 1px rgba(0, 0, 0, 0.5),
           0 2px 6px rgba(0, 0, 0, 0.45),
@@ -435,7 +453,7 @@
       .chapter p {
         margin-top: 1.05rem;
         font-size: 1.05rem;
-        font-weight: 400;
+        font-weight: 300;
         line-height: 1.55;
         letter-spacing: 0.015em;
         max-width: 28ch;
@@ -598,7 +616,7 @@
       text-align: center;
       padding: 4rem 1.5rem;
       background:
-        radial-gradient(ellipse 60% 50% at 50% 40%, rgba(201, 166, 107, 0.12), transparent 70%);
+        radial-gradient(ellipse 60% 50% at 50% 40%, rgba(var(--color-primary-rgb), 0.12), transparent 70%);
     }
 
     .finale h2 {
@@ -750,7 +768,7 @@
         1.35rem
         max(1.5rem, env(safe-area-inset-bottom, 0px) + 1.1rem);
       background:
-        radial-gradient(ellipse 90% 45% at 100% 0%, rgba(201, 166, 107, 0.18), transparent 55%),
+        radial-gradient(ellipse 90% 45% at 100% 0%, rgba(var(--color-primary-rgb), 0.18), transparent 55%),
         linear-gradient(165deg, #1a1613 0%, #120f0d 48%, #0c0a09 100%);
       box-shadow: -18px 0 50px rgba(0, 0, 0, 0.45);
       border-left: 1px solid rgba(243, 235, 225, 0.08);
@@ -954,7 +972,7 @@
     .enquire-form select:focus,
     .enquire-form textarea:focus {
       outline: none;
-      border-color: rgba(201, 166, 107, 0.65);
+      border-color: rgba(var(--color-primary-rgb), 0.65);
     }
 
     .enquire-form select {
@@ -1061,7 +1079,7 @@
     .contact__inner h2 em {
       font-style: italic;
       font-weight: 400;
-      color: #f3dfb3;
+      color: var(--gold-light);
     }
 
     .lede {
@@ -1084,8 +1102,9 @@
       justify-content: center;
       margin-top: 1.5rem;
       padding: 0.85rem 1.4rem;
-      border: 1px solid rgba(201, 166, 107, 0.55);
-      color: var(--gold);
+      border: 1px solid var(--color-btn-border);
+      color: var(--color-btn-text);
+      background: var(--color-btn-bg);
       text-decoration: none;
       font-size: 0.72rem;
       letter-spacing: 0.2em;
@@ -1094,18 +1113,18 @@
     }
 
     .btn:hover {
-      background: rgba(201, 166, 107, 0.12);
+      background: var(--color-btn-bg-hover);
     }
 
     .btn--solid {
-      background: var(--gold);
-      color: #1a1510;
-      border-color: var(--gold);
+      background: var(--color-btn-solid-bg);
+      color: var(--color-btn-solid-text);
+      border-color: var(--color-btn-solid-border);
     }
 
     .btn--solid:hover {
-      background: #dfc08a;
-      color: #1a1510;
+      background: var(--color-btn-solid-bg-hover);
+      color: var(--color-btn-solid-text);
     }
 
     /* Photography */
@@ -1120,7 +1139,7 @@
     .photo-filters button {
       appearance: none;
       background: transparent;
-      border: 1px solid rgba(243, 235, 225, 0.14);
+      border: 1px solid var(--color-border);
       color: var(--muted);
       padding: 0.55rem 1rem;
       font: inherit;
@@ -1133,8 +1152,8 @@
     .photo-filters button.is-active,
     .photo-filters button:hover {
       color: var(--paper);
-      border-color: rgba(201, 166, 107, 0.65);
-      background: rgba(201, 166, 107, 0.08);
+      border-color: var(--color-border-accent-soft);
+      background: var(--color-btn-bg-hover);
     }
 
     .photo-filters__blurb {
@@ -1397,7 +1416,7 @@
     transparent 40deg,
     rgba(246, 201, 163, 0.15) 70deg,
     #f6c9a3 110deg,
-    #f2a691 130deg,
+    var(--offer-from) 130deg,
     rgba(234, 182, 216, 0.55) 155deg,
     transparent 200deg,
     transparent 250deg,
@@ -1553,7 +1572,7 @@
 
     .contact__socials a:hover {
       color: var(--gold);
-      border-color: rgba(201, 166, 107, 0.55);
+      border-color: rgba(var(--color-primary-rgb), 0.55);
     }
 
     code {
@@ -1583,9 +1602,9 @@
     }
 
     .price-card.is-featured {
-      border-color: rgba(201, 166, 107, 0.55);
+      border-color: rgba(var(--color-primary-rgb), 0.55);
       background:
-        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 166, 107, 0.14), transparent 60%),
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(var(--color-primary-rgb), 0.14), transparent 60%),
         linear-gradient(180deg, rgba(255,250,243,0.04), transparent);
     }
 
@@ -1642,7 +1661,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
-  margin-top: 3rem;
+  margin-top: 3.75rem;
   align-items: stretch;
 }
 
@@ -1657,12 +1676,13 @@
   }
 }
 
-/* Base card: dark glass, subtle border, NOT white */
+/* Base card: dark glass, subtle border */
 .price-card {
   position: relative;
   display: flex;
   flex-direction: column;
   padding: 2.6rem 2rem 2.2rem;
+  overflow: hidden; /* keep bulb + beam inside the box */
   border-radius: 20px;
   background: linear-gradient(
     160deg,
@@ -1671,94 +1691,290 @@
   );
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(6px);
+  cursor: pointer;
+  outline: none;
 
   opacity: 0;
-  transform: translateY(24px);
   animation: priceFadeIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   animation-delay: var(--delay, 0s);
 
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.5s ease, box-shadow 0.5s ease,
-              background 0.5s ease;
+    border-color 0.5s ease, box-shadow 0.5s ease, background 0.5s ease,
+    padding 0.45s ease;
 }
 
 @keyframes priceFadeIn {
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 .price-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(242, 166, 145, 0.4);
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.07),
-    rgba(255, 255, 255, 0.02)
-  );
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  transform: translateY(-6px);
+  border-color: rgba(var(--color-primary-rgb), 0.35);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.38);
 }
 
-/* Corner glow, appears on hover */
+.price-card:focus-visible {
+  border-color: rgba(var(--color-primary-rgb), 0.55);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25);
+}
+
+/* Soft fill glow (selected / hover) */
 .price-card__glow {
   position: absolute;
   inset: 0;
   border-radius: 20px;
   background: radial-gradient(
-    260px circle at 50% 0%,
-    rgba(242, 166, 145, 0.16),
+    ellipse 80% 55% at 50% 0%,
+    rgba(var(--color-primary-rgb), 0.18),
     transparent 70%
   );
   opacity: 0;
   transition: opacity 0.5s ease;
   pointer-events: none;
+  filter: blur(2px);
 }
 
 .price-card:hover .price-card__glow {
+  opacity: 0.55;
+}
+
+/* ── Real spotlight: soft bulb + feathered wash (no hard triangle) ─ */
+.price-card__lamp {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.price-card__lamp.is-on {
   opacity: 1;
 }
 
-/* Featured card: gradient border glow, always-on subtle lift */
-.price-card.is-featured {
-  border: 1px solid transparent;
+.price-card__fixture {
+  display: none;
+}
+
+/* Cord from ceiling of the card */
+.price-card__wire {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1.5px;
+  height: 1.15rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(var(--color-primary-rgb), 0.55) 40%,
+    rgba(var(--color-primary-rgb), 0.85) 100%
+  );
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(var(--color-primary-rgb), 0.25);
+}
+
+.price-card__wire::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 7px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 0 0 2px 2px;
+  background: rgba(var(--color-primary-rgb), 0.65);
+}
+
+.price-card__wire::after {
+  /* small socket / cap above the inverted bulb */
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  width: 8px;
+  height: 6px;
+  transform: translateX(-50%);
+  border-radius: 1px 1px 2px 2px;
+  background: linear-gradient(
+    to bottom,
+    rgba(220, 200, 170, 0.75),
+    rgba(var(--color-primary-rgb), 0.9)
+  );
+  box-shadow: 0 0 8px rgba(var(--color-primary-rgb), 0.35);
+}
+
+.price-card__bulb {
+  position: absolute;
+  top: 1.05rem;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  z-index: 3;
+  font-size: 1.65rem;
+  line-height: 1;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--color-primary-bright);
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 32;
+  filter: drop-shadow(0 0 6px rgba(255, 248, 235, 0.95))
+    drop-shadow(0 0 14px rgba(var(--color-primary-rgb), 0.85))
+    drop-shadow(0 4px 22px rgba(var(--color-primary-rgb), 0.45));
+  animation: bulbPulse 3.2s ease-in-out infinite;
+  user-select: none;
+}
+
+@keyframes bulbPulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(255, 248, 235, 0.85))
+      drop-shadow(0 0 14px rgba(var(--color-primary-rgb), 0.75))
+      drop-shadow(0 4px 20px rgba(var(--color-primary-rgb), 0.35));
+    color: var(--color-primary-bright);
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 248, 235, 1))
+      drop-shadow(0 0 18px rgba(var(--color-primary-rgb), 0.95))
+      drop-shadow(0 6px 28px rgba(var(--color-primary-rgb), 0.5));
+    color: #fff8f0;
+  }
+}
+
+/*
+ * Realistic light volume:
+ * layered soft radials + heavy blur — no clip-path edges
+ */
+.price-card__beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 160%;
+  height: 115%;
+  transform: translateX(-50%);
+  z-index: 1;
   background:
-    linear-gradient(160deg, rgba(30, 20, 22, 0.9), rgba(20, 14, 16, 0.9)) padding-box,
-    linear-gradient(135deg, #f2a691, #eab6d8) border-box;
-  transform: translateY(-6px);
-  box-shadow: 0 20px 50px rgba(242, 166, 145, 0.15);
+    /* bright core under the hanging bulb */
+    radial-gradient(
+      ellipse 18% 12% at 50% 12%,
+      rgba(255, 248, 235, 0.45) 0%,
+      rgba(var(--color-primary-rgb), 0.28) 40%,
+      transparent 72%
+    ),
+    /* main soft cone */
+    radial-gradient(
+      ellipse 55% 70% at 50% 8%,
+      rgba(var(--color-primary-rgb), 0.32) 0%,
+      rgba(var(--color-primary-rgb), 0.14) 32%,
+      rgba(var(--color-primary-rgb), 0.05) 55%,
+      transparent 72%
+    ),
+    /* wide ambient spill */
+    radial-gradient(
+      ellipse 95% 85% at 50% 6%,
+      rgba(var(--color-primary-rgb), 0.14) 0%,
+      rgba(var(--color-primary-rgb), 0.04) 45%,
+      transparent 70%
+    );
+  filter: blur(18px);
+  opacity: 0.95;
+  mix-blend-mode: screen;
 }
 
-.price-card.is-featured:hover {
-  transform: translateY(-14px);
-  box-shadow: 0 30px 60px rgba(242, 166, 145, 0.28);
+.price-card__beam::before {
+  content: "";
+  position: absolute;
+  inset: 8% 18% 0;
+  background: radial-gradient(
+    ellipse 45% 60% at 50% 0%,
+    rgba(255, 244, 220, 0.22) 0%,
+    rgba(var(--color-primary-rgb), 0.12) 35%,
+    transparent 68%
+  );
+  filter: blur(28px);
+  opacity: 0.9;
 }
 
-.price-card.is-featured .price-card__glow {
-  opacity: 0.6;
+.price-card__beam::after {
+  content: "";
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  width: 42%;
+  height: 55%;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    ellipse 50% 70% at 50% 0%,
+    rgba(255, 250, 240, 0.16) 0%,
+    rgba(var(--color-primary-rgb), 0.08) 40%,
+    transparent 75%
+  );
+  filter: blur(22px);
+  opacity: 0.85;
 }
 
+/* Selected: soft top wash matching the real light */
+.price-card.is-selected {
+  padding-top: 3.75rem;
+  border-color: rgba(var(--color-primary-rgb), 0.42);
+  background:
+    radial-gradient(
+      ellipse 90% 55% at 50% 0%,
+      rgba(var(--color-primary-rgb), 0.2) 0%,
+      rgba(var(--color-primary-rgb), 0.06) 42%,
+      transparent 68%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(255, 255, 255, 0.055),
+      rgba(255, 255, 255, 0.012)
+    );
+  transform: translateY(-8px);
+  box-shadow:
+    0 0 36px rgba(var(--color-primary-rgb), 0.14),
+    0 22px 48px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(236, 208, 184, 0.12);
+}
+
+.price-card.is-selected:hover {
+  transform: translateY(-10px);
+  box-shadow:
+    0 0 44px rgba(var(--color-primary-rgb), 0.18),
+    0 28px 56px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(236, 208, 184, 0.16);
+}
+
+.price-card.is-selected .price-card__glow {
+  opacity: 0.65;
+}
+
+/* Small bronze badge — corner, clear of the bulb */
 .price-card__tag {
   position: absolute;
-  top: -0.9rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.35rem 1rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #1a1214;
-  background: linear-gradient(135deg, #f2a691, #eab6d8);
+  color: var(--color-primary-bright);
+  background: rgba(var(--color-primary-rgb), 0.14);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.35);
   border-radius: 999px;
-  box-shadow: 0 6px 16px rgba(234, 166, 145, 0.4);
-  animation: tagFloat 2.8s ease-in-out infinite;
   z-index: 2;
-}
-
-@keyframes tagFloat {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-4px); }
 }
 
 .price-card__name {
@@ -1768,26 +1984,32 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #a89a95;
-  z-index: 1;
+  color: rgba(245, 235, 226, 0.55);
+  z-index: 2;
+  transition: color 0.35s ease;
+}
+
+.price-card.is-selected .price-card__name {
+  color: var(--color-primary-light);
 }
 
 .price-card__amount {
   position: relative;
   margin: 0 0 0.4rem;
+  font-family: var(--font-display);
   font-size: 2.3rem;
-  font-weight: 700;
-  color: #f5ece7;
-  z-index: 1;
+  font-weight: 500;
+  color: var(--color-text);
+  z-index: 2;
 }
 
 .price-card__note {
   position: relative;
   margin: 0 0 1.6rem;
-  color: #8f8480;
+  color: var(--color-text-muted);
   font-size: 0.92rem;
   line-height: 1.5;
-  z-index: 1;
+  z-index: 2;
 }
 
 .price-card__features {
@@ -1799,7 +2021,7 @@
   flex-direction: column;
   gap: 0.75rem;
   flex-grow: 1;
-  z-index: 1;
+  z-index: 2;
 }
 
 .price-card__features li {
@@ -1807,7 +2029,7 @@
   align-items: flex-start;
   gap: 0.6rem;
   font-size: 0.94rem;
-  color: #d6cdc9;
+  color: rgba(245, 235, 226, 0.82);
   opacity: 0;
   transform: translateX(-8px);
   animation: featureIn 0.5s ease forwards;
@@ -1831,13 +2053,22 @@
   margin-top: 0.1rem;
   border-radius: 50%;
   font-size: 0.62rem;
-  color: #1a1214;
-  background: linear-gradient(135deg, #f2a691, #eab6d8);
-  transition: transform 0.3s ease;
+  color: var(--color-text-on-primary);
+  background: var(--color-primary);
+  transition: transform 0.3s ease, background 0.35s ease, box-shadow 0.35s ease;
+}
+
+.price-card.is-selected .price-card__check {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-warm),
+    var(--color-primary)
+  );
+  box-shadow: 0 0 10px rgba(var(--color-primary-rgb), 0.35);
 }
 
 .price-card:hover .price-card__check {
-  transform: scale(1.15) rotate(8deg);
+  transform: scale(1.1);
 }
 
 .price-card__cta {
@@ -1847,17 +2078,22 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  color: #f5ece7;
+  color: var(--color-text);
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: transparent;
-  z-index: 1;
+  z-index: 2;
   transition: background 0.35s ease, border-color 0.35s ease, color 0.35s ease;
 }
 
+.price-card.is-selected .price-card__cta {
+  border-color: rgba(var(--color-primary-rgb), 0.45);
+  color: var(--color-primary-bright);
+}
+
 .price-card__cta:hover {
-  background: linear-gradient(135deg, #f2a691, #eab6d8);
-  border-color: transparent;
-  color: #1a1214;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
 }
 
 .price-card__cta-arrow {
@@ -1908,7 +2144,7 @@
 }
 
 .about .eyebrow {
-  color: #c9a66b;
+  color: var(--gold);
 }
 
 .about__copy h2 {
@@ -1916,13 +2152,13 @@
 }
 
 .about__copy h2 em {
-  color: #c9a66b;
+  color: var(--gold);
   font-style: italic;
 }
 
 .about__role {
   margin-top: 0.75rem;
-  color: #c9a66b;
+  color: var(--gold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.75rem;
@@ -1950,14 +2186,14 @@
   justify-content: center;
   margin-top: 2rem;
   padding: 14px 34px;
-  background: #c9a66b;
+  background: var(--gold);
   color: #fff;
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 2px;
   font-size: 14px;
   font-weight: 500;
-  border: 2px solid #c9a66b;
+  border: 2px solid var(--gold);
   transition: all 0.3s ease;
 }
 .gallery-end {
@@ -1987,7 +2223,7 @@
 }
 .about-btn:hover {
   background: transparent;
-  color: #c9a66b;
+  color: var(--gold);
 }
     /* Contact */
     .contact {
@@ -2046,7 +2282,7 @@
 
     .site-footer__links a:hover {
       color: var(--gold);
-      border-color: rgba(201, 166, 107, 0.55);
+      border-color: rgba(var(--color-primary-rgb), 0.55);
     }
 
     .contact__socials {
@@ -2298,7 +2534,7 @@
 }
 
 .photos-banner-subtitle {
-  color: #c9a66b;
+  color: var(--gold);
   font-size: 14px;
   letter-spacing: 6px;
   text-transform: uppercase;
@@ -2308,13 +2544,13 @@
 .photos-banner-title {
   color: #fff;
   font-size: 72px;
-  font-family: "Cormorant Garamond", serif;
+  font-family: "Cormorant Garamond";
   font-weight: 500;
   line-height: 1.1;
 }
 
 .photos-banner-title span {
-  color: #c9a66b;
+  color: var(--gold);
   font-style: italic;
 }
 
@@ -2333,7 +2569,7 @@
 }
 
 .photos-home-link a {
-  color: #c9a66b;
+  color: var(--gold);
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -2396,7 +2632,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #c99a6a;
+  color: var(--gold-soft);
 }
 
 .eyebrow--light {
@@ -2541,7 +2777,7 @@
 }
 
 .about-intro__body h2 em {
-  color: #c99a6a;
+  color: var(--gold-soft);
 }
 
 .about-intro__role {
@@ -2550,7 +2786,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #c99a6a;
+  color: var(--gold-soft);
 }
 
 .about-intro__loc {
@@ -2569,7 +2805,7 @@
   display: inline-block;
   margin-top: 0.8rem;
   padding: 0.9rem 2rem;
-  background: #c99a6a;
+  background: var(--gold-soft);
   color: #fff;
   border-radius: 2px;
   font-weight: 600;
@@ -2670,7 +2906,7 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #fff;
-  background: #c99a6a;
+  background: var(--gold-soft);
   padding: 0.3rem 0.8rem;
   border-radius: 999px;
 }
@@ -2721,7 +2957,7 @@
 
 .about-value:hover {
   transform: translateY(-6px);
-  border-color: #c99a6a;
+  border-color: var(--gold-soft);
   box-shadow: 0 16px 32px rgba(201, 154, 106, 0.15);
 }
 
@@ -2757,7 +2993,7 @@
 }
 
 .about-cta h2 em {
-  color: #c99a6a;
+  color: var(--gold-soft);
 }
 
 .about-cta p {
@@ -2768,7 +3004,7 @@
 .about-cta .btn {
   display: inline-block;
   padding: 0.9rem 2.4rem;
-  background: #c99a6a;
+  background: var(--gold-soft);
   color: #fff;
   border-radius: 2px;
   font-weight: 600;
@@ -2855,7 +3091,7 @@
 }
 
 .gallery-banner__content h1 em {
-  color: #e0b878;
+  color: var(--gold-warm);
   font-style: italic;
 }
 
@@ -3076,7 +3312,7 @@
 }
 
 .services-banner__content h1 em {
-  color: #e0b878;
+  color: var(--gold-warm);
   font-style: italic;
 }
 
@@ -3097,7 +3333,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: #e0b878;
+  color: var(--gold-warm);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -3267,7 +3503,7 @@
   border-radius: 50%;
   font-size: 0.6rem;
   color: #fff;
-  background: linear-gradient(135deg, #e0b878, #eab6d8);
+  background: linear-gradient(135deg, var(--gold-warm), var(--offer-to));
 }
 
 .service-row__cta {
@@ -3304,7 +3540,7 @@
 }
 
 .services-cta h2 em {
-  color: #c99a6a;
+  color: var(--gold-soft);
   font-style: italic;
 }
 
@@ -3326,10 +3562,10 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #c99a6a;
+  color: var(--gold-soft);
 }
 .eyebrow--light {
-  color: #e0b878;
+  color: var(--gold-warm);
 }
 
 /* ---------- Banner ---------- */
@@ -3356,7 +3592,7 @@
 }
 
 .contact-banner__content h1 em {
-  color: #e0b878;
+  color: var(--gold-warm);
   font-style: italic;
 }
 
@@ -3436,15 +3672,15 @@
 .field select:focus,
 .field textarea:focus {
   outline: none;
-  border-color: #e0b878;
+  border-color: var(--gold-warm);
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 0 0 3px rgba(224, 184, 120, 0.12);
 }
 
 .field select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #e0b878 50%),
-    linear-gradient(135deg, #e0b878 50%, transparent 50%);
+  background-image: linear-gradient(45deg, transparent 50%, var(--gold-warm) 50%),
+    linear-gradient(135deg, var(--gold-warm) 50%, transparent 50%);
   background-position: calc(100% - 20px) center, calc(100% - 15px) center;
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
@@ -3487,7 +3723,7 @@
 .contact-form__submit {
   margin-top: 2rem;
   padding: 0.95rem 2.4rem;
-  background: #c99a6a;
+  background: var(--gold-soft);
   color: #1a1410;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -3499,7 +3735,7 @@
 }
 
 .contact-form__submit:hover:not(:disabled) {
-  background: #e0b878;
+  background: var(--gold-warm);
   transform: translateY(-3px);
   box-shadow: 0 12px 28px rgba(224, 184, 120, 0.25);
 }
@@ -3544,7 +3780,7 @@
   left: 28px;
   padding: 0.4rem 1rem;
   background: rgba(13, 13, 13, 0.75);
-  color: #e0b878;
+  color: var(--gold-warm);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -3605,7 +3841,7 @@
 /* Brand block */
 .site-footer__logo {
   display: inline-block;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Cormorant Garamond";
   font-size: 1.5rem;
   color: #fff;
   margin-bottom: 0.9rem;
@@ -3613,7 +3849,7 @@
 }
 
 .site-footer__logo:hover {
-  color: #e0b878;
+  color: var(--gold-warm);
 }
 
 .site-footer__tagline {
@@ -3648,7 +3884,7 @@
 
 .site-footer__social:hover {
   transform: translateY(-4px);
-  background: linear-gradient(135deg, #e0b878, #eab6d8);
+  background: linear-gradient(135deg, var(--gold-warm), var(--offer-to));
   border-color: transparent;
   color: #1a1410;
 }
@@ -3659,7 +3895,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #c99a6a;
+  color: var(--gold-soft);
   margin-bottom: 1.2rem;
 }
 
@@ -3686,7 +3922,7 @@
   top: 50%;
   width: 0;
   height: 1px;
-  background: #e0b878;
+  background: var(--gold-warm);
   transition: width 0.3s ease;
   transform: translateY(-50%);
 }
@@ -3729,7 +3965,7 @@
 }
 
 .site-footer__cta:hover {
-  background: linear-gradient(135deg, #e0b878, #eab6d8);
+  background: linear-gradient(135deg, var(--gold-warm), var(--offer-to));
   border-color: transparent;
   color: #1a1410;
   transform: translateX(4px);

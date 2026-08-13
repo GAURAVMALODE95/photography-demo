@@ -5,12 +5,12 @@ export const chapters = [
     to: 0.25,
     title: (
       <>
-        Your wedding,
+        Light, timing,
         <br />
-        <em>remembered</em>
+        <em>instinct</em>
       </>
     ),
-    body: "Real smiles. Soft light. Photos you’ll love looking at for years.",
+    body: "The best shots aren't planned — they're seen a second before they happen.",
     as: "h1",
   },
   {
@@ -18,12 +18,12 @@ export const chapters = [
     to: 0.5,
     title: (
       <>
-        Love, as it
+        The moment,
         <br />
-        <em>happens</em>
+        caught <em>mid-breath</em>
       </>
     ),
-    body: "From varmala to pheras — we follow your day, gently and honestly.",
+    body: "Candid frames, perfect timing — the shot that wasn't posed but still felt right.",
     as: "h2",
   },
   {
@@ -31,12 +31,12 @@ export const chapters = [
     to: 0.75,
     title: (
       <>
-        Little details
+        Candid over posed,
         <br />
-        that <em>matter</em>
+        <em>always</em>
       </>
     ),
-    body: "Mehendi, jewellery, quiet glances — the small things you’ll miss later.",
+    body: "Real laughter, real tears — the frames that don't need direction.",
     as: "h2",
   },
   {
@@ -44,12 +44,12 @@ export const chapters = [
     to: 1.01,
     title: (
       <>
-        Films made
+        One frame,
         <br />
-        with <em>heart</em>
+        zero <em>second takes</em>
       </>
     ),
-    body: "Beautiful wedding films that feel like your story, not just highlights.",
+    body: "The decisive moment — captured once, remembered forever.",
     as: "h2",
   },
 ];

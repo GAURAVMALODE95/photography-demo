@@ -30,6 +30,8 @@ function adoptEarlyVideo(host) {
   host.appendChild(early);
   document.documentElement.classList.add("hero-adopted");
   window.__HERO_EARLY_VIDEO = early;
+  const bootCopy = document.getElementById("hero-early-copy");
+  if (bootCopy) bootCopy.remove();
   return early;
 }
 
@@ -230,14 +232,15 @@ export default function AutoPlayHero({
     };
   }, []);
 
-  // Text cycle
+  // Text cycle — starts fully visible with the video (no delayed fade-in)
   useEffect(() => {
     const total = chapters.length;
     if (!total) return;
 
     let raf = 0;
     let active = true;
-    const startedAt = performance.now();
+    // Skip opening fade so first line is on screen with the video immediately
+    const startedAt = performance.now() - CHAPTER_FADE_MS;
     const cycleMs = CHAPTER_HOLD_MS * total;
 
     const paint = (index, opacity) => {

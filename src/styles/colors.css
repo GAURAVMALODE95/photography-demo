@@ -1,0 +1,89 @@
+/**
+ * GLOBAL COLORS — EDIT THIS FILE
+ * Primary swatch locked to your warm bronze (#a8703f).
+ * Other tokens are tuned to match that family.
+ */
+
+:root {
+  /* =========================================================
+     1) PAGE BACKGROUNDS  (warm dark to match bronze)
+     ========================================================= */
+  --color-bg: #100c09; /* main page / dark background */
+  --color-bg-elevated: #1c140f; /* elevated / button text base */
+
+  /* =========================================================
+     2) TEXT COLORS  (warm cream paper)
+     ========================================================= */
+  --color-text: #f5ebe2; /* primary body / heading text on dark */
+  --color-text-muted: rgba(245, 235, 226, 0.62); /* secondary / lede text */
+  --color-text-on-primary: #1c140f; /* text on solid primary button */
+
+  /* =========================================================
+     3) PRIMARY / ACCENT  — your swatch
+     ========================================================= */
+  --color-primary: #a8703f; /* MAIN accent */
+  --color-primary-soft: #b5804f; /* slightly lighter twin */
+  --color-primary-warm: #c08d5a; /* warmer highlight */
+  --color-primary-light: #ddb896; /* soft italic / highlight text */
+  --color-primary-bright: #ecd0b8; /* brighter emphasis */
+  --color-primary-hover: #935f34; /* solid button hover (deeper) */
+
+  /* RGB of --color-primary (#a8703f) */
+  --color-primary-rgb: 168, 112, 63;
+
+  /* =========================================================
+     4) BUTTONS  (derived from primary)
+     ========================================================= */
+  --color-btn-text: var(--color-primary);
+  --color-btn-border: rgba(var(--color-primary-rgb), 0.55);
+  --color-btn-bg: transparent;
+  --color-btn-bg-hover: rgba(var(--color-primary-rgb), 0.14);
+
+  --color-btn-solid-bg: var(--color-primary);
+  --color-btn-solid-border: var(--color-primary);
+  --color-btn-solid-text: var(--color-text-on-primary);
+  --color-btn-solid-bg-hover: var(--color-primary-hover);
+
+  /* =========================================================
+     5) BORDERS / LINES / DIVIDERS
+     ========================================================= */
+  --color-border: rgba(245, 235, 226, 0.14); /* quiet UI border */
+  --color-border-accent: var(--color-primary);
+  --color-border-accent-soft: rgba(var(--color-primary-rgb), 0.65);
+
+  /* =========================================================
+     6) TEXT ACCENTS
+     ========================================================= */
+  --color-text-accent: var(--color-primary);
+  --color-text-accent-soft: var(--color-primary-light);
+  --color-text-accent-bright: var(--color-primary-bright);
+  --color-text-accent-warm: var(--color-primary-warm);
+
+  /* =========================================================
+     7) “WHAT I OFFER” CARDS ONLY  (left separate)
+     ========================================================= */
+  --color-offer-from: #f2a691;
+  --color-offer-to: #eab6d8;
+
+  /* =========================================================
+     LEGACY ALIASES
+     ========================================================= */
+  --ink: var(--color-bg);
+  --paper: var(--color-text);
+  --muted: var(--color-text-muted);
+
+  --gold: var(--color-primary);
+  --gold-soft: var(--color-primary-soft);
+  --gold-warm: var(--color-primary-warm);
+  --gold-light: var(--color-primary-light);
+  --gold-bright: var(--color-primary-bright);
+
+  --accent: var(--color-primary);
+  --accent-soft: var(--color-primary-soft);
+  --accent-warm: var(--color-primary-warm);
+  --accent-light: var(--color-primary-light);
+  --accent-bright: var(--color-primary-bright);
+
+  --offer-from: var(--color-offer-from);
+  --offer-to: var(--color-offer-to);
+}

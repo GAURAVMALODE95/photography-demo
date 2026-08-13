@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="fonts-pending">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Your Studio</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=lightbulb_2"
+    />
+    <script type="module">
+      import "/src/styles/colors.css";
+    </script>
     <!--
-      On homepage: VIDEO FIRST — before fonts, CSS, React, or chat.
-      On other routes: skip video boot and load the app normally.
+      Hard rule: never paint text until original fonts are loaded via FontFace.
+      Video may start earlier; text appears only with Cormorant + Outfit.
     -->
     <script>
       (function () {
@@ -19,31 +26,112 @@
           ? "/media/scrub-mobile-auto.mp4"
           : "/media/scrub.mp4";
 
+        window.__markFontsReady = function () {
+          if (document.documentElement.classList.contains("fonts-ready")) return;
+          document.documentElement.classList.remove("fonts-pending");
+          document.documentElement.classList.add("fonts-ready");
+          var copy = document.getElementById("hero-early-copy");
+          if (copy) {
+            copy.hidden = false;
+            requestAnimationFrame(function () {
+              copy.classList.add("is-visible");
+            });
+          }
+        };
+
+        function originalsReady() {
+          if (!document.fonts || !document.fonts.check) return false;
+          return (
+            document.fonts.check('400 48px "Cormorant Garamond"') &&
+            document.fonts.check('500 48px "Cormorant Garamond"') &&
+            document.fonts.check('italic 400 48px "Cormorant Garamond"') &&
+            document.fonts.check('300 16px "Outfit"') &&
+            document.fonts.check('400 16px "Outfit"')
+          );
+        }
+
         window.__loadSiteFonts = function () {
           if (window.__fontsLoading) return;
           window.__fontsLoading = true;
-          var p1 = document.createElement("link");
-          p1.rel = "preconnect";
-          p1.href = "https://fonts.googleapis.com";
-          var p2 = document.createElement("link");
-          p2.rel = "preconnect";
-          p2.href = "https://fonts.gstatic.com";
-          p2.crossOrigin = "";
-          var sheet = document.createElement("link");
-          sheet.rel = "stylesheet";
-          sheet.href =
-            "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500&display=swap";
-          document.head.appendChild(p1);
-          document.head.appendChild(p2);
-          document.head.appendChild(sheet);
+
+          var faces = [
+            {
+              family: "Cormorant Garamond",
+              source: 'url("/fonts/cormorant-400.woff2") format("woff2")',
+              descriptors: { weight: "400", style: "normal", display: "block" },
+            },
+            {
+              family: "Cormorant Garamond",
+              source: 'url("/fonts/cormorant-500.woff2") format("woff2")',
+              descriptors: { weight: "500", style: "normal", display: "block" },
+            },
+            {
+              family: "Cormorant Garamond",
+              source: 'url("/fonts/cormorant-italic-400.woff2") format("woff2")',
+              descriptors: { weight: "400", style: "italic", display: "block" },
+            },
+            {
+              family: "Outfit",
+              source: 'url("/fonts/outfit-300.woff2") format("woff2")',
+              descriptors: { weight: "300", style: "normal", display: "block" },
+            },
+            {
+              family: "Outfit",
+              source: 'url("/fonts/outfit-400.woff2") format("woff2")',
+              descriptors: { weight: "400", style: "normal", display: "block" },
+            },
+            {
+              family: "Outfit",
+              source: 'url("/fonts/outfit-500.woff2") format("woff2")',
+              descriptors: { weight: "500", style: "normal", display: "block" },
+            },
+          ];
+
+          if (typeof FontFace === "undefined" || !document.fonts) {
+            // Ancient browsers only: stylesheet + long delay
+            var sheet = document.createElement("link");
+            sheet.rel = "stylesheet";
+            sheet.href = "/fonts/fonts.css";
+            sheet.onload = function () {
+              setTimeout(window.__markFontsReady, 100);
+            };
+            document.head.appendChild(sheet);
+            return;
+          }
+
+          Promise.all(
+            faces.map(function (def) {
+              var face = new FontFace(def.family, def.source, def.descriptors);
+              return face.load().then(function (loaded) {
+                document.fonts.add(loaded);
+                return loaded;
+              });
+            })
+          )
+            .then(function () {
+              // Only reveal when the browser confirms the real faces
+              var tries = 0;
+              (function confirm() {
+                if (originalsReady()) {
+                  window.__markFontsReady();
+                  return;
+                }
+                if (tries++ < 40) {
+                  setTimeout(confirm, 50);
+                  return;
+                }
+                // Still not confirmed — do NOT flash a substitute; leave text hidden
+                console.warn("[fonts] original faces not confirmed");
+              })();
+            })
+            .catch(function (err) {
+              console.warn("[fonts] load failed", err);
+            });
         };
 
+        // Start fonts ASAP (tiny files). Video still kicks in body first paint.
         if (!window.__IS_HOME) {
           window.__loadSiteFonts();
-        } else {
-          setTimeout(function () {
-            if (window.__loadSiteFonts) window.__loadSiteFonts();
-          }, 2500);
         }
       })();
     </script>
@@ -51,8 +139,37 @@
       html,
       body {
         margin: 0;
-        background: #0c0a09;
+        background: var(--ink);
       }
+
+      /* Hide ALL text until original fonts are confirmed */
+      html.fonts-pending :is(
+          h1,
+          h2,
+          h3,
+          h4,
+          h5,
+          h6,
+          p,
+          a,
+          span,
+          li,
+          button,
+          label,
+          nav,
+          em,
+          strong,
+          small
+        ) {
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+        text-shadow: none !important;
+      }
+      html.fonts-pending #hero-early-copy {
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
+
       #hero-early-video {
         position: fixed;
         inset: 0;
@@ -61,12 +178,65 @@
         object-fit: cover;
         object-position: center center;
         z-index: 2;
-        background: #0c0a09 url("/media/posters/01.jpg") center / cover no-repeat;
+        background: var(--ink) url("/media/posters/01.jpg") center / cover no-repeat;
         pointer-events: none;
+      }
+      #hero-early-copy {
+        position: fixed;
+        inset: 0;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 5rem 1.35rem;
+        pointer-events: none;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.35s ease;
+      }
+      html.fonts-ready #hero-early-copy.is-visible {
+        opacity: 1;
+      }
+      #hero-early-copy[hidden] {
+        display: none !important;
+      }
+      #hero-early-copy h1 {
+        margin: 0;
+        font-family: "Cormorant Garamond";
+        font-weight: 500;
+        font-size: clamp(2.85rem, 12vw, 4.4rem);
+        line-height: 0.95;
+        letter-spacing: -0.035em;
+        max-width: 10ch;
+        text-shadow:
+          0 0 1px rgba(0, 0, 0, 0.55),
+          0 2px 4px rgba(0, 0, 0, 0.55),
+          0 10px 28px rgba(0, 0, 0, 0.45);
+      }
+      #hero-early-copy h1 em {
+        font-style: italic;
+        font-weight: 400;
+        color: var(--gold-bright);
+      }
+      #hero-early-copy p {
+        margin: 1.05rem auto 0;
+        max-width: 28ch;
+        font-family: "Outfit";
+        font-size: 1.05rem;
+        font-weight: 300;
+        line-height: 1.55;
+        color: #fff8ef;
+        text-shadow:
+          0 0 1px rgba(0, 0, 0, 0.55),
+          0 2px 5px rgba(0, 0, 0, 0.5),
+          0 12px 28px rgba(0, 0, 0, 0.4);
       }
       #root {
         position: relative;
         z-index: 1;
+      }
+      html.hero-adopted #hero-early-copy {
+        display: none !important;
       }
     </style>
   </head>
@@ -84,13 +254,21 @@
       disablepictureinpicture
       hidden
     ></video>
+    <div id="hero-early-copy" hidden>
+      <div>
+        <h1>Light, timing,<br /><em>instinct</em></h1>
+        <p>The best shots aren't planned — they're seen a second before they happen.</p>
+      </div>
+    </div>
     <script>
       (function () {
         var v = document.getElementById("hero-early-video");
+        var copy = document.getElementById("hero-early-copy");
         if (!v) return;
 
         if (!window.__IS_HOME) {
           v.remove();
+          if (copy) copy.remove();
           window.__HERO_EARLY_VIDEO = null;
           return;
         }
@@ -110,11 +288,8 @@
         var play = v.play();
         if (play && play.catch) play.catch(function () {});
 
-        function onUsable() {
-          if (window.__loadSiteFonts) window.__loadSiteFonts();
-        }
-        v.addEventListener("loadeddata", onUsable, { once: true });
-        v.addEventListener("canplay", onUsable, { once: true });
+        // Video request started — now load original fonts (small local files)
+        if (window.__loadSiteFonts) window.__loadSiteFonts();
       })();
     </script>
 
@@ -146,6 +321,18 @@
     <script type="text/javascript">
       var Tawk_API = Tawk_API || {},
         Tawk_LoadStart = new Date();
+      // Keep chat bubble only — never auto-open the conversation panel
+      Tawk_API.onLoad = function () {
+        try {
+          Tawk_API.minimize();
+        } catch (e) {}
+        // Welcome-message triggers sometimes maximize after load — close those too
+        setTimeout(function () {
+          try {
+            Tawk_API.minimize();
+          } catch (e) {}
+        }, 800);
+      };
       (function () {
         function loadTawk() {
           var s1 = document.createElement("script"),
