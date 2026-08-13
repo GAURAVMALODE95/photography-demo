@@ -1,8 +1,8 @@
-/** Hero chapter copy — simple wedding English for Indian clients */
+/** Hero chapter copy — 4 lines, paced for reading on autoplay */
 export const chapters = [
   {
     from: 0,
-    to: 0.18,
+    to: 0.25,
     title: (
       <>
         Your wedding,
@@ -14,8 +14,8 @@ export const chapters = [
     as: "h1",
   },
   {
-    from: 0.18,
-    to: 0.38,
+    from: 0.25,
+    to: 0.5,
     title: (
       <>
         Love, as it
@@ -27,8 +27,8 @@ export const chapters = [
     as: "h2",
   },
   {
-    from: 0.38,
-    to: 0.58,
+    from: 0.5,
+    to: 0.75,
     title: (
       <>
         Little details
@@ -40,8 +40,8 @@ export const chapters = [
     as: "h2",
   },
   {
-    from: 0.58,
-    to: 0.78,
+    from: 0.75,
+    to: 1.01,
     title: (
       <>
         Films made
@@ -50,19 +50,6 @@ export const chapters = [
       </>
     ),
     body: "Beautiful wedding films that feel like your story, not just highlights.",
-    as: "h2",
-  },
-  {
-    from: 0.78,
-    to: 1.01,
-    title: (
-      <>
-        So you never
-        <br />
-        forget this <em>day</em>
-      </>
-    ),
-    body: "Years from now, it should still feel like you were right there.",
     as: "h2",
   },
 ];

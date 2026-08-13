@@ -67,6 +67,16 @@
       height: 520vh; /* scroll runway — tweak feel here */
     }
 
+    /* Autoplay hero — same UI, one screen tall (no scroll scrub) */
+    .hero.hero--auto {
+      height: 100vh;
+      height: 100svh;
+    }
+
+    .hero.hero--auto .hero__sticky {
+      position: relative;
+    }
+
     .hero__sticky {
       position: sticky;
       top: 0;
@@ -320,6 +330,12 @@
     @media (max-width: 900px) {
       .hero {
         height: 400vh;
+      }
+
+      .hero.hero--auto {
+        height: 100vh;
+        height: 100dvh;
+        height: 100svh;
       }
 
       .hero__sticky {
