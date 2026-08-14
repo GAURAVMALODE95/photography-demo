@@ -117,6 +117,18 @@
       transform: scale(1.2);
     }
 
+    /* Never show desktop focus cursor on touch / mobile */
+    @media (hover: none), (pointer: coarse) {
+      html.has-custom-cursor,
+      html.has-custom-cursor * {
+        cursor: auto !important;
+      }
+
+      .photo-cursor {
+        display: none !important;
+      }
+    }
+
     /* ═══════════════ HERO SCRUB ═══════════════ */
     .hero {
       position: relative;
@@ -1169,6 +1181,47 @@
       .site-nav__brand-name {
         font-size: 1.22rem;
         max-width: min(58vw, 14rem);
+      }
+
+      /* Icon-only menu — no label, no border box */
+      .site-nav__toggle {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        gap: 0;
+        justify-content: center;
+        border: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: none;
+      }
+
+      .site-nav__toggle:hover,
+      .site-nav__toggle:focus-visible {
+        background: transparent;
+        border: 0;
+      }
+
+      .site-nav__toggle-label {
+        display: none;
+      }
+
+      .site-nav__toggle-icon {
+        width: 20px;
+        height: 12px;
+      }
+
+      .site-nav__toggle-icon span {
+        height: 1.5px;
+      }
+
+      .site-nav.is-open .site-nav__toggle-icon span:first-child {
+        transform: translateY(5.25px) rotate(45deg);
+      }
+
+      .site-nav.is-open .site-nav__toggle-icon span:last-child {
+        transform: translateY(-5.25px) rotate(-45deg);
       }
     }
 
@@ -2623,6 +2676,64 @@
   margin-top: 40px;
 }
 
+.photo-swiper-wrap {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.photo-swiper-wrap--mobile {
+  padding: 0 1rem 0.5rem;
+  /* Allow horizontal swipe; Lenis is blocked via data-lenis-prevent */
+  touch-action: pan-x pinch-zoom;
+}
+
+.photo-swiper-wrap--mobile .swiper {
+  overflow: visible;
+  padding: 0.35rem 0 2.4rem;
+}
+
+.photo-swiper-wrap--mobile .swiper-slide {
+  transition: transform 0.45s ease, opacity 0.45s ease;
+  opacity: 0.55;
+  transform: scale(0.94);
+}
+
+.photo-swiper-wrap--mobile .swiper-slide-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.photo-swiper-wrap--mobile .photo-swiper__link {
+  display: block;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.photo-swiper-wrap--mobile .swiper-pagination {
+  bottom: 0.35rem;
+}
+
+.photo-swiper-wrap--mobile .swiper-pagination-bullet {
+  width: 7px;
+  height: 7px;
+  background: rgba(255, 250, 243, 0.35);
+  opacity: 1;
+}
+
+.photo-swiper-wrap--mobile .swiper-pagination-bullet-active {
+  background: var(--gold);
+  width: 18px;
+  border-radius: 999px;
+}
+
+/* Continuous marquee only feels right when delay is 0 */
+.photo-swiper-wrap--desktop .swiper-wrapper {
+  transition-timing-function: linear !important;
+}
+
 .swiper {
   width: 100%;
   padding: 10px 0 35px;
@@ -2641,10 +2752,15 @@
   border-radius: 16px;
   display: block;
   transition: transform .3s ease;
+  user-select: none;
 }
 
 .photo-slider-image:hover {
   transform: scale(1.04);
+}
+
+.photo-swiper-wrap--mobile .photo-slider-image:hover {
+  transform: none;
 }
 
 .swiper-button-prev,
@@ -2668,9 +2784,22 @@
   }
 }
 
+@media (max-width: 768px) {
+  .photo-slider-image {
+    aspect-ratio: 3 / 4;
+    border-radius: 14px;
+  }
+
+  /* Hide leftover desktop arrows if any */
+  .photo-swiper-wrap--mobile .swiper-button-prev,
+  .photo-swiper-wrap--mobile .swiper-button-next {
+    display: none !important;
+  }
+}
+
 @media (max-width: 600px) {
   .photo-slider-image {
-    aspect-ratio: 1 / 1.3;
+    aspect-ratio: 3 / 4;
   }
 }
 @media (max-width: 992px) {

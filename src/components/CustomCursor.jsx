@@ -1,8 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 
+function canUseCustomCursor() {
+  if (typeof window === "undefined") return false;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) return false;
+
+  // Touch / phone / tablet: never use the desktop focus cursor
+  const coarse = window.matchMedia("(pointer: coarse)").matches;
+  const noHover = window.matchMedia("(hover: none)").matches;
+  if (coarse || noHover) return false;
+
+  // Desktop-class pointer only
+  return window.matchMedia("(pointer: fine)").matches;
+}
+
 /**
- * Clean autofocus brackets — editorial photography cursor.
- * Scales on interactive hover. Disabled on touch devices.
+ * Editorial autofocus cursor — desktop only.
+ * Disabled on touch / coarse pointers so menu taps never leave a stuck icon.
  */
 export default function CustomCursor() {
   const tipRef = useRef(null);
@@ -11,9 +25,10 @@ export default function CustomCursor() {
   const [hidden, setHidden] = useState(true);
 
   useEffect(() => {
-    const fine = window.matchMedia("(pointer: fine)").matches;
-    const noReduce = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!fine || !noReduce) return;
+    if (!canUseCustomCursor()) {
+      document.documentElement.classList.remove("has-custom-cursor");
+      return undefined;
+    }
 
     setEnabled(true);
     document.documentElement.classList.add("has-custom-cursor");
@@ -22,7 +37,18 @@ export default function CustomCursor() {
     let raf = 0;
     let active = true;
 
+    const teardown = () => {
+      if (!active) return;
+      active = false;
+      cancelAnimationFrame(raf);
+      document.documentElement.classList.remove("has-custom-cursor");
+      setEnabled(false);
+      setHidden(true);
+    };
+
     const onMove = (e) => {
+      // Ignore synthetic mouse events after touch
+      if (e.sourceCapabilities?.firesTouchEvents) return;
       pos.x = e.clientX;
       pos.y = e.clientY;
       setHidden(false);
@@ -39,6 +65,9 @@ export default function CustomCursor() {
       setHovering(Boolean(interactive));
     };
 
+    // If the user touches the screen, kill the custom cursor immediately
+    const onTouch = () => teardown();
+
     const tick = () => {
       if (!active) return;
       if (tipRef.current) {
@@ -49,15 +78,27 @@ export default function CustomCursor() {
 
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("mouseover", onOver, { passive: true });
+    window.addEventListener("touchstart", onTouch, { passive: true });
     document.addEventListener("mouseleave", onLeave);
     raf = requestAnimationFrame(tick);
+
+    const mqCoarse = window.matchMedia("(pointer: coarse)");
+    const mqHover = window.matchMedia("(hover: none)");
+    const onMq = () => {
+      if (!canUseCustomCursor()) teardown();
+    };
+    mqCoarse.addEventListener("change", onMq);
+    mqHover.addEventListener("change", onMq);
 
     return () => {
       active = false;
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseover", onOver);
+      window.removeEventListener("touchstart", onTouch);
       document.removeEventListener("mouseleave", onLeave);
+      mqCoarse.removeEventListener("change", onMq);
+      mqHover.removeEventListener("change", onMq);
       document.documentElement.classList.remove("has-custom-cursor");
     };
   }, []);
@@ -77,7 +118,6 @@ export default function CustomCursor() {
     >
       <div className="photo-cursor__focus" ref={tipRef}>
         <svg viewBox="0 0 40 40" width="36" height="36">
-          {/* Autofocus corner brackets */}
           <path
             d="M4 14V4h10M36 14V4H26M4 26v10h10M36 26v10H26"
             fill="none"
@@ -85,7 +125,6 @@ export default function CustomCursor() {
             strokeWidth="1.8"
             strokeLinecap="square"
           />
-          {/* Center focus point */}
           <circle cx="20" cy="20" r="1.6" fill="currentColor" />
           <circle
             cx="20"

@@ -1,12 +1,30 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { categories, gallery } from "../data/site.js";
 
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation } from "swiper/modules";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
 
 import "swiper/css";
 import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+function useIsMobileGallery(breakpoint = 768) {
+  const [mobile, setMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= breakpoint;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const onChange = () => setMobile(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [breakpoint]);
+
+  return mobile;
+}
 
 export default function PhotographySection({
   showAllLink = true,
@@ -14,6 +32,7 @@ export default function PhotographySection({
   limitPerCategory,
 }) {
   const [active, setActive] = useState(initialCategory);
+  const isMobile = useIsMobileGallery(768);
 
   const images = useMemo(() => {
     const list = gallery[active] || [];
@@ -22,6 +41,47 @@ export default function PhotographySection({
       ? list.slice(0, limitPerCategory)
       : list;
   }, [active, limitPerCategory]);
+
+  const mobileSwiper = {
+    modules: [Autoplay, Pagination],
+    slidesPerView: 1,
+    spaceBetween: 14,
+    centeredSlides: true,
+    loop: images.length > 1,
+    speed: 650,
+    grabCursor: true,
+    resistanceRatio: 0.65,
+    autoplay: {
+      delay: 3200,
+      disableOnInteraction: false,
+      pauseOnMouseEnter: false,
+      stopOnLastSlide: false,
+    },
+    pagination: {
+      clickable: true,
+      dynamicBullets: true,
+    },
+    // One-slide snap — no continuous marquee on mobile
+  };
+
+  const desktopSwiper = {
+    modules: [Autoplay, Navigation],
+    navigation: true,
+    loop: images.length > 4,
+    speed: 5000,
+    autoplay: {
+      delay: 0,
+      disableOnInteraction: false,
+      reverseDirection: false,
+    },
+    spaceBetween: 20,
+    breakpoints: {
+      769: { slidesPerView: 2 },
+      1024: { slidesPerView: 4 },
+    },
+  };
+
+  const swiperProps = isMobile ? mobileSwiper : desktopSwiper;
 
   return (
     <section className="section photography pb-0" id="photography">
@@ -61,79 +121,31 @@ export default function PhotographySection({
         {categories.find((c) => c.id === active)?.blurb}
       </p>
 
-      {/* First Row */}
-      <Swiper
-        modules={[Autoplay, Navigation]}
-        navigation
-        loop={true}
-        speed={5000}
-        autoplay={{
-          delay: 0,
-          disableOnInteraction: false,
-          reverseDirection: false,
-        }}
-        spaceBetween={20}
-        breakpoints={{
-          0: {
-            slidesPerView: 1,
-          },
-          640: {
-            slidesPerView: 2,
-          },
-          1024: {
-            slidesPerView: 4,
-          },
-        }}
+      <div
+        className={`photo-swiper-wrap${isMobile ? " photo-swiper-wrap--mobile" : " photo-swiper-wrap--desktop"}`}
+        data-lenis-prevent={isMobile ? "" : undefined}
+        data-lenis-prevent-touch={isMobile ? "" : undefined}
       >
-        {images.map((img, index) => (
-          <SwiperSlide key={index}>
-            <Link to="/photos">
-              <img
-                src={img}
-                alt={`Photo ${index + 1}`}
-                className="photo-slider-image"
-              />
-            </Link>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-
-            {/* Second Row */}
-      {/* <Swiper
-        modules={[Autoplay, Navigation]}
-        navigation
-        loop={true}
-        speed={5000}
-        autoplay={{
-          delay: 0,
-          disableOnInteraction: false,
-          reverseDirection: true,
-        }}
-        spaceBetween={20}
-        breakpoints={{
-          0: {
-            slidesPerView: 1,
-          },
-          640: {
-            slidesPerView: 2,
-          },
-          1024: {
-            slidesPerView: 4,
-          },
-        }}
-      >
-        {images.map((img, index) => (
-          <SwiperSlide key={`second-${index}`}>
-            <Link to="/photos">
-              <img
-                src={img}
-                alt={`Photo ${index + 1}`}
-                className="photo-slider-image"
-              />
-            </Link>
-          </SwiperSlide>
-        ))}
-      </Swiper> */}
+        <Swiper
+          key={`${active}-${isMobile ? "m" : "d"}-${images.length}`}
+          className="photo-swiper"
+          {...swiperProps}
+        >
+          {images.map((img, index) => (
+            <SwiperSlide key={`${active}-${index}`}>
+              <Link to="/photos" className="photo-swiper__link">
+                <img
+                  src={img}
+                  alt={`Photo ${index + 1}`}
+                  className="photo-slider-image"
+                  loading="lazy"
+                  draggable={false}
+                />
+              </Link>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
 
       {showAllLink && (
         <div className="section__cta">
