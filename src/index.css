@@ -1234,6 +1234,20 @@
       filter: none;
     }
 
+    /* Hide Tawk chat on mobile — bubble + panel */
+    @media (max-width: 768px) {
+      iframe[src*="tawk.to"],
+      iframe[title*="chat"],
+      div[id^="tawk"],
+      div[class*="tawk-"],
+      .widget-visible {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
+    }
+
     /* Enquire form + map */
     .enquire-layout {
       display: grid;
@@ -2684,8 +2698,6 @@
 
 .photo-swiper-wrap--mobile {
   padding: 0 1rem 0.5rem;
-  /* Allow horizontal swipe; Lenis is blocked via data-lenis-prevent */
-  touch-action: pan-x pinch-zoom;
 }
 
 .photo-swiper-wrap--mobile .swiper {

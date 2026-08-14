@@ -321,20 +321,31 @@
     <script type="text/javascript">
       var Tawk_API = Tawk_API || {},
         Tawk_LoadStart = new Date();
-      // Keep chat bubble only — never auto-open the conversation panel
-      Tawk_API.onLoad = function () {
+
+      function isTawkMobile() {
+        return window.matchMedia("(max-width: 768px)").matches;
+      }
+
+      function applyTawkVisibility() {
         try {
-          Tawk_API.minimize();
+          if (isTawkMobile()) {
+            if (typeof Tawk_API.hideWidget === "function") Tawk_API.hideWidget();
+          } else if (typeof Tawk_API.showWidget === "function") {
+            Tawk_API.showWidget();
+            if (typeof Tawk_API.minimize === "function") Tawk_API.minimize();
+          }
         } catch (e) {}
-        // Welcome-message triggers sometimes maximize after load — close those too
-        setTimeout(function () {
-          try {
-            Tawk_API.minimize();
-          } catch (e) {}
-        }, 800);
+      }
+
+      // Keep chat bubble only on desktop — never on mobile
+      Tawk_API.onLoad = function () {
+        applyTawkVisibility();
+        setTimeout(applyTawkVisibility, 800);
       };
+
       (function () {
         function loadTawk() {
+          if (isTawkMobile()) return; // never load chat widget on phones
           var s1 = document.createElement("script"),
             s0 = document.getElementsByTagName("script")[0];
           s1.async = true;
@@ -352,6 +363,17 @@
         }
         window.addEventListener("load", function () {
           whenIdle(loadTawk);
+        });
+
+        var mq = window.matchMedia("(max-width: 768px)");
+        mq.addEventListener("change", function () {
+          if (isTawkMobile()) {
+            applyTawkVisibility();
+          } else if (!document.querySelector('script[src*="embed.tawk.to"]')) {
+            loadTawk();
+          } else {
+            applyTawkVisibility();
+          }
         });
       })();
     </script>

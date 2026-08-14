@@ -51,6 +51,12 @@ export default function PhotographySection({
     speed: 650,
     grabCursor: true,
     resistanceRatio: 0.65,
+    // Let vertical page scroll pass through; only claim clear horizontal swipes
+    touchAngle: 28,
+    threshold: 12,
+    touchStartPreventDefault: false,
+    touchMoveStopPropagation: false,
+    preventInteractionOnTransition: false,
     autoplay: {
       delay: 3200,
       disableOnInteraction: false,
@@ -61,7 +67,6 @@ export default function PhotographySection({
       clickable: true,
       dynamicBullets: true,
     },
-    // One-slide snap — no continuous marquee on mobile
   };
 
   const desktopSwiper = {
@@ -123,8 +128,6 @@ export default function PhotographySection({
 
       <div
         className={`photo-swiper-wrap${isMobile ? " photo-swiper-wrap--mobile" : " photo-swiper-wrap--desktop"}`}
-        data-lenis-prevent={isMobile ? "" : undefined}
-        data-lenis-prevent-touch={isMobile ? "" : undefined}
       >
         <Swiper
           key={`${active}-${isMobile ? "m" : "d"}-${images.length}`}

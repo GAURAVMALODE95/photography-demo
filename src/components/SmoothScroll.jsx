@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { ReactLenis } from "lenis/react";
 
-/** Desktop wheel feel — kept stable; never remounted for mobile tweaks */
-const LENIS_OPTIONS = {
+/** Desktop only — mobile uses native OS scroll (much better on phones) */
+const DESKTOP_LENIS_OPTIONS = {
   autoRaf: true,
   duration: 1.2,
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   smoothWheel: true,
   syncTouch: false,
-  syncTouchLerp: 0.1,
-  touchInertiaExponent: 1.35,
   touchMultiplier: 1.6,
   wheelMultiplier: 0.95,
   anchors: {
@@ -18,33 +16,54 @@ const LENIS_OPTIONS = {
   },
 };
 
-function useIsMobileScroll() {
-  const [mobile, setMobile] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(max-width: 979px)").matches;
+function usePreferNativeScroll() {
+  const [native, setNative] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia(
+      "(max-width: 979px), ((pointer: coarse) and (hover: none))"
+    ).matches;
   });
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 979px)");
-    const onChange = () => setMobile(mq.matches);
+    const mq = window.matchMedia(
+      "(max-width: 979px), ((pointer: coarse) and (hover: none))"
+    );
+    const onChange = () => setNative(mq.matches);
     onChange();
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  return mobile;
+  return native;
 }
 
 /**
- * Site-wide smooth scrolling via Lenis.
- * Desktop: existing wheel feel (untouched).
- * Mobile: enables syncTouch for smoother finger scrolling.
+ * Desktop: Lenis smooth wheel scroll.
+ * Mobile / touch: native scroll only — Lenis touch smoothing feels laggy.
  */
 export default function SmoothScroll({ children }) {
   const lenisRef = useRef(null);
-  const isMobile = useIsMobileScroll();
+  const preferNative = usePreferNativeScroll();
 
+  // Clean Lenis leftovers when switching to native (mobile)
   useEffect(() => {
+    if (!preferNative) return undefined;
+    const root = document.documentElement;
+    root.classList.remove(
+      "lenis",
+      "lenis-smooth",
+      "lenis-scrolling",
+      "lenis-stopped",
+      "lenis-smooth-touch"
+    );
+    delete window.__lenis;
+    return undefined;
+  }, [preferNative]);
+
+  // Bridge window.scrollTo → Lenis only while desktop Lenis is active
+  useEffect(() => {
+    if (preferNative) return undefined;
+
     const nativeScrollTo = window.scrollTo.bind(window);
     let applying = false;
 
@@ -96,34 +115,14 @@ export default function SmoothScroll({ children }) {
       window.scrollTo = nativeScrollTo;
       delete window.__lenis;
     };
-  }, []);
+  }, [preferNative]);
 
-  // Mobile-only: turn on touch smoothing. Desktop stays syncTouch: false.
-  useEffect(() => {
-    const apply = () => {
-      const lenis = lenisRef.current?.lenis;
-      if (!lenis) return false;
-      if (isMobile) {
-        lenis.options.syncTouch = true;
-        lenis.options.syncTouchLerp = 0.1;
-        lenis.options.touchInertiaExponent = 1.35;
-        lenis.options.touchMultiplier = 1.2;
-      } else {
-        lenis.options.syncTouch = false;
-        lenis.options.touchMultiplier = 1.6;
-      }
-      return true;
-    };
-
-    if (apply()) return undefined;
-    const id = window.setInterval(() => {
-      if (apply()) window.clearInterval(id);
-    }, 50);
-    return () => window.clearInterval(id);
-  }, [isMobile]);
+  if (preferNative) {
+    return children;
+  }
 
   return (
-    <ReactLenis root ref={lenisRef} options={LENIS_OPTIONS}>
+    <ReactLenis root ref={lenisRef} options={DESKTOP_LENIS_OPTIONS}>
       {children}
     </ReactLenis>
   );
