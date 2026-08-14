@@ -12,8 +12,61 @@ function pickSrc(desktopSrc, mobileSrc) {
   return window.innerWidth <= MOBILE_MAX ? mobileSrc : desktopSrc;
 }
 
-function easeInOut(t) {
-  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+const easeInOut = easeInOutCubic;
+
+/** Gentle page bounce: peek content below, then spring back */
+function bounceScreen({ peakPx = 120, onDone } = {}) {
+  if (typeof window === "undefined") return () => {};
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    onDone?.();
+    return () => {};
+  }
+
+  let cancelled = false;
+  let raf = 0;
+  const startY = window.scrollY || window.pageYOffset || 0;
+  const peak = Math.min(peakPx, Math.round(window.innerHeight * 0.16));
+
+  const animate = (from, to, duration, ease) =>
+    new Promise((resolve) => {
+      const t0 = performance.now();
+      const step = (now) => {
+        if (cancelled) {
+          resolve();
+          return;
+        }
+        const t = Math.min(1, (now - t0) / duration);
+        window.scrollTo({ top: from + (to - from) * ease(t), left: 0 });
+        if (t < 1) raf = requestAnimationFrame(step);
+        else resolve();
+      };
+      raf = requestAnimationFrame(step);
+    });
+
+  (async () => {
+    await animate(startY, startY + peak, 480, easeOutCubic);
+    if (cancelled) return;
+    await animate(startY + peak, startY, 620, easeInOutCubic);
+    if (cancelled) return;
+    // Softer second dip so the clue is unmistakable
+    await animate(startY, startY + peak * 0.45, 340, easeOutCubic);
+    if (cancelled) return;
+    await animate(startY + peak * 0.45, startY, 480, easeInOutCubic);
+    if (!cancelled) onDone?.();
+  })();
+
+  return () => {
+    cancelled = true;
+    cancelAnimationFrame(raf);
+  };
 }
 
 /**
@@ -59,6 +112,10 @@ export default function AutoPlayHero({
       window.__HERO_EARLY_VIDEO || document.getElementById("hero-early-video");
     return !!(v && v.readyState >= 2);
   });
+  const [nudgeScroll, setNudgeScroll] = useState(false);
+  const nudgeFiredRef = useRef(false);
+  const bouncingRef = useRef(false);
+  const cancelBounceRef = useRef(null);
 
   // Adopt early video before paint so React never covers it with a blank hero
   useLayoutEffect(() => {
@@ -139,6 +196,20 @@ export default function AutoPlayHero({
         if (Number.isFinite(duration) && duration > 0 && progressRef.current) {
           const p = Math.min(1, Math.max(0, video.currentTime / duration));
           progressRef.current.style.transform = `scaleX(${p})`;
+
+          // First loop nearly done + still on hero → bounce the page as a scroll clue
+          if (!nudgeFiredRef.current && p >= 0.92 && window.scrollY < 48) {
+            nudgeFiredRef.current = true;
+            setNudgeScroll(true);
+            bouncingRef.current = true;
+            cancelBounceRef.current?.();
+            cancelBounceRef.current = bounceScreen({
+              peakPx: isMobile ? 100 : 130,
+              onDone: () => {
+                bouncingRef.current = false;
+              },
+            });
+          }
         }
         raf = requestAnimationFrame(tick);
       };
@@ -228,7 +299,43 @@ export default function AutoPlayHero({
     return () => {
       active = false;
       cancelAnimationFrame(raf);
+      cancelBounceRef.current?.();
+      bouncingRef.current = false;
       if (typeof cleanupAttach === "function") cleanupAttach();
+    };
+  }, [isMobile]);
+
+  // User scroll/touch cancels auto-bounce; real scroll clears the cue label
+  useEffect(() => {
+    const stopBounce = () => {
+      if (!bouncingRef.current) return;
+      cancelBounceRef.current?.();
+      bouncingRef.current = false;
+    };
+
+    const onScroll = () => {
+      if (bouncingRef.current) return; // ignore programmatic bounce scroll
+      if (window.scrollY < 48) return;
+      setNudgeScroll(false);
+      nudgeFiredRef.current = true;
+      stopBounce();
+    };
+
+    const onUserIntent = () => {
+      stopBounce();
+      if (window.scrollY >= 48) {
+        setNudgeScroll(false);
+        nudgeFiredRef.current = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onUserIntent, { passive: true });
+    window.addEventListener("touchstart", onUserIntent, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onUserIntent);
+      window.removeEventListener("touchstart", onUserIntent);
     };
   }, []);
 
@@ -284,7 +391,7 @@ export default function AutoPlayHero({
 
   return (
     <section
-      className={`hero hero--auto${isMobile ? " hero--mobile" : ""}${ready ? " is-ready" : ""}`}
+      className={`hero hero--auto${isMobile ? " hero--mobile" : ""}${ready ? " is-ready" : ""}${nudgeScroll ? " is-nudge" : ""}`}
       aria-label="Cinematic opening"
     >
       <div className="hero__sticky">
@@ -317,12 +424,21 @@ export default function AutoPlayHero({
           <span className="hero__progress-fill" ref={progressRef} />
         </div>
 
-        <div className="hero__hint" aria-hidden="true">
+        <div
+          className={`hero__hint${nudgeScroll ? " is-nudge" : ""}`}
+          aria-hidden="true"
+        >
           <div className="hero__hint-mouse">
             <span className="hero__hint-wheel" />
           </div>
           <div className="hero__hint-touch" />
-          <span className="hero__hint-label">Explore</span>
+          <span className="hero__hint-label">
+            {nudgeScroll
+              ? isMobile
+                ? "Swipe up"
+                : "Scroll to explore"
+              : "Explore"}
+          </span>
           <svg
             className="hero__hint-chevrons"
             width="20"

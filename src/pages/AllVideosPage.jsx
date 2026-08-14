@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { films } from "../data/site.js";
+import Reveal from "../components/Reveal.jsx";
 
 function VideoCard({ film, index }) {
   const videoRef = useRef(null);
@@ -101,19 +102,21 @@ export default function AllVideosPage() {
         </div>
       </section>
 
-      {/* Back home */}
-      <div className="page__bar">
-        <Link to="/" className="page__back">
-          ← Home
-        </Link>
-      </div>
+      <Reveal as="div" delay={40}>
+        {/* Back home */}
+        <div className="page__bar">
+          <Link to="/" className="page__back">
+            ← Home
+          </Link>
+        </div>
 
-      {/* Reel grid — 4 per row */}
-      <section className="video-grid">
-        {films.map((film, index) => (
-          <VideoCard key={film.title} film={film} index={index} />
-        ))}
-      </section>
+        {/* Reel grid — 4 per row */}
+        <section className="video-grid">
+          {films.map((film, index) => (
+            <VideoCard key={film.title} film={film} index={index} />
+          ))}
+        </section>
+      </Reveal>
     </main>
   );
 }

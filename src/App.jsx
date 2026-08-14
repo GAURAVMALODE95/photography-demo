@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import CustomCursor from "./components/CustomCursor.jsx";
 import SiteNav from "./components/SiteNav.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
+import SmoothScroll from "./components/SmoothScroll.jsx";
+import Reveal from "./components/Reveal.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import AllPhotosPage from "./pages/AllPhotosPage.jsx";
 import AllVideosPage from "./pages/AllVideosPage.jsx";
@@ -12,7 +14,7 @@ import Footer from "./components/Footer.jsx";
 
 export default function App() {
   return (
-    <>
+    <SmoothScroll>
       <ScrollToTop />
       <CustomCursor />
       <SiteNav />
@@ -24,7 +26,9 @@ export default function App() {
         <Route path="/services" element={<AllServicesPage />} />
         <Route path="/conatct" element={<ContactPage />} />
       </Routes>
-      <Footer />
-    </>
+      <Reveal as="div" delay={40}>
+        <Footer />
+      </Reveal>
+    </SmoothScroll>
   );
 }

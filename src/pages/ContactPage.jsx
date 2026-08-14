@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Reveal from "../components/Reveal.jsx";
 
 export default function ContactPage() {
   const [form, setForm] = useState({
@@ -44,6 +45,7 @@ export default function ContactPage() {
       </section>
 
       {/* Form + map */}
+      <Reveal as="div" delay={40}>
       <section className="contact-body">
         <form className="contact-form" onSubmit={handleSubmit}>
           <div className="contact-form__grid">
@@ -164,6 +166,7 @@ export default function ContactPage() {
         />
         <div className="contact-map__label">Nashik, India</div>
       </section>
+      </Reveal>
     </main>
   );
 }

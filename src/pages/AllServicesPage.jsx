@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { servicesDetailed } from "../data/site.js";
+import Reveal from "../components/Reveal.jsx";
 
 function ServiceRow({ service, index }) {
   const ref = useRef(null);
@@ -80,30 +81,32 @@ export default function AllServicesPage() {
         </div>
       </section>
 
-      {/* Back home */}
-      <div className="page__bar">
-        <Link to="/" className="page__back">
-          ← Home
-        </Link>
-      </div>
+      <Reveal as="div" delay={40}>
+        {/* Back home */}
+        <div className="page__bar">
+          <Link to="/" className="page__back">
+            ← Home
+          </Link>
+        </div>
 
-      {/* Vertical service cards */}
-      <section className="service-list">
-        {servicesDetailed.map((s, index) => (
-          <ServiceRow key={s.title} service={s} index={index} />
-        ))}
-      </section>
+        {/* Vertical service cards */}
+        <section className="service-list">
+          {servicesDetailed.map((s, index) => (
+            <ServiceRow key={s.title} service={s} index={index} />
+          ))}
+        </section>
 
-      {/* Closing CTA */}
-      <section className="services-cta">
-        <h2>
-          Not sure which fits <em>your day?</em>
-        </h2>
-        <p>Tell me the date and vibe — I'll suggest the right coverage.</p>
-        <a className="btn" href="#contact">
-          Let's talk
-        </a>
-      </section>
+        {/* Closing CTA */}
+        <section className="services-cta">
+          <h2>
+            Not sure which fits <em>your day?</em>
+          </h2>
+          <p>Tell me the date and vibe — I'll suggest the right coverage.</p>
+          <a className="btn" href="#contact">
+            Let's talk
+          </a>
+        </section>
+      </Reveal>
     </main>
   );
 }

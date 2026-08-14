@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { categories, gallery } from "../data/site.js";
+import Reveal from "../components/Reveal.jsx";
 
 const IMAGES_PER_PAGE = 20;
 
@@ -43,6 +44,7 @@ export default function AllPhotosPage() {
   </div>
 </section>
 
+<Reveal as="div" delay={40}>
 <div className="photos-home-link">
   <Link to="/">← Home</Link>
 </div>
@@ -104,6 +106,7 @@ export default function AllPhotosPage() {
     Stay connected to explore many more beautiful moments.
   </p>
 </div>
+</Reveal>
     </main>
   );
 }
