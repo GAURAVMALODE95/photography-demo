@@ -1,8 +1,15 @@
 import { useEffect, useRef } from "react";
 
+function isMobileUx() {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia(
+    "(max-width: 979px), ((pointer: coarse) and (hover: none))"
+  ).matches;
+}
+
 /**
  * Scroll reveal for sections below the hero.
- * Uses IntersectionObserver — no GSAP required.
+ * Mobile: show instantly (no blur/lag). Desktop: soft fade-in.
  */
 export default function Reveal({
   children,
@@ -18,7 +25,8 @@ export default function Reveal({
     if (!el) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
+    // Instant paint on phones — delayed/blurred reveals feel like lag
+    if (reduce || isMobileUx()) {
       el.classList.add("is-inview");
       return;
     }
@@ -30,8 +38,8 @@ export default function Reveal({
         if (once) io.unobserve(el);
       },
       {
-        threshold: 0.12,
-        rootMargin: "0px 0px -10% 0px",
+        threshold: 0.08,
+        rootMargin: "0px 0px -6% 0px",
       }
     );
 

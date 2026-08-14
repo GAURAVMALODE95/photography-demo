@@ -60,6 +60,40 @@
       }
     }
 
+    /* Mobile UX: no blurred delayed reveals — they feel like lag */
+    @media (max-width: 979px), ((pointer: coarse) and (hover: none)) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+        will-change: auto;
+      }
+
+      .about-stat.reveal {
+        transform: none;
+      }
+
+      .site-nav.is-scrolled .site-nav__bar {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: rgba(16, 12, 9, 0.92);
+      }
+
+      .site-nav__drawer {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    /* While horizontally swiping the photo gallery, freeze page scroll */
+    html.photo-swipe-lock,
+    html.photo-swipe-lock body {
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+
     body {
       font-family: var(--font-body);
       background: var(--ink);
@@ -2706,14 +2740,13 @@
 }
 
 .photo-swiper-wrap--mobile .swiper-slide {
-  transition: transform 0.45s ease, opacity 0.45s ease;
-  opacity: 0.55;
-  transform: scale(0.94);
+  opacity: 1;
+  transform: none;
 }
 
 .photo-swiper-wrap--mobile .swiper-slide-active {
   opacity: 1;
-  transform: scale(1);
+  transform: none;
 }
 
 .photo-swiper-wrap--mobile .photo-swiper__link {

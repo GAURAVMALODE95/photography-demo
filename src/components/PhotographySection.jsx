@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { categories, gallery } from "../data/site.js";
 
@@ -26,6 +26,91 @@ function useIsMobileGallery(breakpoint = 768) {
   return mobile;
 }
 
+/**
+ * Lock page scroll while the user is clearly swiping the gallery sideways,
+ * but keep vertical page scroll when they swipe up/down on the images.
+ */
+function useHorizontalSwipeLock(enabled) {
+  const touchRef = useRef({
+    x: 0,
+    y: 0,
+    axis: null,
+    locked: false,
+  });
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+
+    const unlock = () => {
+      const t = touchRef.current;
+      if (t.locked) {
+        document.documentElement.classList.remove("photo-swipe-lock");
+        t.locked = false;
+      }
+      t.axis = null;
+    };
+
+    return () => unlock();
+  }, [enabled]);
+
+  if (!enabled) return {};
+
+  return {
+    onTouchStart: (swiper, e) => {
+      const touch = e.touches?.[0];
+      if (!touch) return;
+      touchRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        axis: null,
+        locked: false,
+      };
+      swiper.allowTouchMove = true;
+    },
+    onTouchMove: (swiper, e) => {
+      const touch = e.touches?.[0];
+      if (!touch) return;
+      const t = touchRef.current;
+      const dx = touch.clientX - t.x;
+      const dy = touch.clientY - t.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      if (!t.axis && (absX > 6 || absY > 6)) {
+        t.axis = absX > absY * 1.15 ? "x" : "y";
+      }
+
+      if (t.axis === "y") {
+        // Vertical intent → page scroll; disable slide dragging
+        swiper.allowTouchMove = false;
+        if (t.locked) {
+          document.documentElement.classList.remove("photo-swipe-lock");
+          t.locked = false;
+        }
+        return;
+      }
+
+      if (t.axis === "x") {
+        // Horizontal intent → keep page still
+        swiper.allowTouchMove = true;
+        if (!t.locked) {
+          document.documentElement.classList.add("photo-swipe-lock");
+          t.locked = true;
+        }
+      }
+    },
+    onTouchEnd: (swiper) => {
+      swiper.allowTouchMove = true;
+      const t = touchRef.current;
+      if (t.locked) {
+        document.documentElement.classList.remove("photo-swipe-lock");
+        t.locked = false;
+      }
+      t.axis = null;
+    },
+  };
+}
+
 export default function PhotographySection({
   showAllLink = true,
   initialCategory = "wedding",
@@ -33,6 +118,7 @@ export default function PhotographySection({
 }) {
   const [active, setActive] = useState(initialCategory);
   const isMobile = useIsMobileGallery(768);
+  const swipeLock = useHorizontalSwipeLock(isMobile);
 
   const images = useMemo(() => {
     const list = gallery[active] || [];
@@ -48,17 +134,15 @@ export default function PhotographySection({
     spaceBetween: 14,
     centeredSlides: true,
     loop: images.length > 1,
-    speed: 650,
-    grabCursor: true,
-    resistanceRatio: 0.65,
-    // Let vertical page scroll pass through; only claim clear horizontal swipes
-    touchAngle: 28,
-    threshold: 12,
+    speed: 520,
+    resistanceRatio: 0.55,
+    threshold: 8,
+    touchAngle: 35,
     touchStartPreventDefault: false,
-    touchMoveStopPropagation: false,
-    preventInteractionOnTransition: false,
+    preventClicks: true,
+    preventClicksPropagation: true,
     autoplay: {
-      delay: 3200,
+      delay: 3500,
       disableOnInteraction: false,
       pauseOnMouseEnter: false,
       stopOnLastSlide: false,
@@ -67,6 +151,7 @@ export default function PhotographySection({
       clickable: true,
       dynamicBullets: true,
     },
+    ...swipeLock,
   };
 
   const desktopSwiper = {
@@ -142,6 +227,7 @@ export default function PhotographySection({
                   alt={`Photo ${index + 1}`}
                   className="photo-slider-image"
                   loading="lazy"
+                  decoding="async"
                   draggable={false}
                 />
               </Link>
