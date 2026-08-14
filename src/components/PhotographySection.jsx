@@ -26,10 +26,6 @@ function useIsMobileGallery(breakpoint = 768) {
   return mobile;
 }
 
-/**
- * Lock page scroll while the user is clearly swiping the gallery sideways,
- * but keep vertical page scroll when they swipe up/down on the images.
- */
 function useHorizontalSwipeLock(enabled) {
   const touchRef = useRef({
     x: 0,
@@ -40,17 +36,9 @@ function useHorizontalSwipeLock(enabled) {
 
   useEffect(() => {
     if (!enabled) return undefined;
-
-    const unlock = () => {
-      const t = touchRef.current;
-      if (t.locked) {
-        document.documentElement.classList.remove("photo-swipe-lock");
-        t.locked = false;
-      }
-      t.axis = null;
+    return () => {
+      document.documentElement.classList.remove("photo-swipe-lock");
     };
-
-    return () => unlock();
   }, [enabled]);
 
   if (!enabled) return {};
@@ -81,7 +69,6 @@ function useHorizontalSwipeLock(enabled) {
       }
 
       if (t.axis === "y") {
-        // Vertical intent → page scroll; disable slide dragging
         swiper.allowTouchMove = false;
         if (t.locked) {
           document.documentElement.classList.remove("photo-swipe-lock");
@@ -91,7 +78,6 @@ function useHorizontalSwipeLock(enabled) {
       }
 
       if (t.axis === "x") {
-        // Horizontal intent → keep page still
         swiper.allowTouchMove = true;
         if (!t.locked) {
           document.documentElement.classList.add("photo-swipe-lock");
@@ -129,12 +115,12 @@ export default function PhotographySection({
   }, [active, limitPerCategory]);
 
   const mobileSwiper = {
-    modules: [Autoplay, Pagination],
+    modules: [Autoplay, Pagination, Navigation],
     slidesPerView: 1,
-    spaceBetween: 14,
-    centeredSlides: true,
+    spaceBetween: 12,
+    centeredSlides: false,
     loop: images.length > 1,
-    speed: 520,
+    speed: 450,
     resistanceRatio: 0.55,
     threshold: 8,
     touchAngle: 35,
@@ -144,12 +130,14 @@ export default function PhotographySection({
     autoplay: {
       delay: 3500,
       disableOnInteraction: false,
-      pauseOnMouseEnter: false,
-      stopOnLastSlide: false,
     },
     pagination: {
       clickable: true,
       dynamicBullets: true,
+    },
+    navigation: {
+      prevEl: ".photo-swiper-nav--prev",
+      nextEl: ".photo-swiper-nav--next",
     },
     ...swipeLock,
   };
@@ -214,6 +202,25 @@ export default function PhotographySection({
       <div
         className={`photo-swiper-wrap${isMobile ? " photo-swiper-wrap--mobile" : " photo-swiper-wrap--desktop"}`}
       >
+        {isMobile && (
+          <>
+            <button
+              type="button"
+              className="photo-swiper-nav photo-swiper-nav--prev"
+              aria-label="Previous photo"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="photo-swiper-nav photo-swiper-nav--next"
+              aria-label="Next photo"
+            >
+              ›
+            </button>
+          </>
+        )}
+
         <Swiper
           key={`${active}-${isMobile ? "m" : "d"}-${images.length}`}
           className="photo-swiper"

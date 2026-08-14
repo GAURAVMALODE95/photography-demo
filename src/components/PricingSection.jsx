@@ -43,7 +43,7 @@ export default function PricingSection() {
                 }
               }}
             >
-              {/* Hanging inverted bulb + soft light wash */}
+              {/* Lamp kept on all viewports — mobile uses a lite CSS path */}
               <div
                 className={`price-card__lamp${isSelected ? " is-on" : ""}`}
                 aria-hidden="true"

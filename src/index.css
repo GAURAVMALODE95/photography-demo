@@ -2503,6 +2503,107 @@
   transform: scale(1.1);
 }
 
+/* Mobile: same lamp look, GPU-light (no stacked blurs / infinite filter anim) */
+@media (max-width: 768px) {
+  .price-card {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(
+      160deg,
+      rgba(40, 30, 24, 0.96),
+      rgba(22, 17, 14, 0.98)
+    );
+    opacity: 1;
+    animation: none;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .price-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .price-card.is-selected {
+    box-shadow: inset 0 0 0 1px rgba(var(--color-primary-rgb), 0.35);
+    background: linear-gradient(
+      165deg,
+      rgba(52, 38, 28, 0.98),
+      rgba(24, 18, 14, 1)
+    );
+  }
+
+  .price-card__features li {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+
+  /* Soft wash via gradient only — no filter:blur */
+  .price-card__glow {
+    filter: none;
+    background: radial-gradient(
+      ellipse 90% 60% at 50% 0%,
+      rgba(var(--color-primary-rgb), 0.22),
+      transparent 68%
+    );
+  }
+
+  .price-card.is-selected .price-card__glow,
+  .price-card:hover .price-card__glow {
+    opacity: 0.7;
+  }
+
+  .price-card__lamp {
+    transition: opacity 0.3s ease;
+  }
+
+  .price-card__wire {
+    box-shadow: none;
+  }
+
+  .price-card__wire::after {
+    box-shadow: none;
+  }
+
+  /* Bulb: static text-shadow instead of animated multi drop-shadow */
+  .price-card__bulb {
+    filter: none;
+    animation: none;
+    color: var(--color-primary-bright);
+    text-shadow:
+      0 0 10px rgba(255, 248, 235, 0.85),
+      0 0 22px rgba(var(--color-primary-rgb), 0.65);
+  }
+
+  /* One soft cone — no blur layers / blend modes */
+  .price-card__beam {
+    width: 140%;
+    height: 100%;
+    filter: none;
+    mix-blend-mode: normal;
+    opacity: 1;
+    background:
+      radial-gradient(
+        ellipse 22% 14% at 50% 11%,
+        rgba(255, 248, 235, 0.38) 0%,
+        rgba(var(--color-primary-rgb), 0.22) 45%,
+        transparent 75%
+      ),
+      radial-gradient(
+        ellipse 62% 78% at 50% 6%,
+        rgba(var(--color-primary-rgb), 0.28) 0%,
+        rgba(var(--color-primary-rgb), 0.1) 38%,
+        transparent 70%
+      );
+  }
+
+  .price-card__beam::before,
+  .price-card__beam::after {
+    content: none;
+    display: none;
+  }
+}
+
 .price-card__cta {
   position: relative;
   display: inline-flex;
@@ -2731,17 +2832,22 @@
 }
 
 .photo-swiper-wrap--mobile {
-  padding: 0 1rem 0.5rem;
+  position: relative;
+  padding: 0 2.75rem 0.5rem; /* room for prev/next */
+  overflow: hidden;
 }
 
 .photo-swiper-wrap--mobile .swiper {
-  overflow: visible;
-  padding: 0.35rem 0 2.4rem;
+  overflow: hidden;
+  padding: 0.25rem 0 2.35rem;
+  width: 100%;
 }
 
 .photo-swiper-wrap--mobile .swiper-slide {
+  width: 100% !important;
   opacity: 1;
   transform: none;
+  box-sizing: border-box;
 }
 
 .photo-swiper-wrap--mobile .swiper-slide-active {
@@ -2752,9 +2858,49 @@
 .photo-swiper-wrap--mobile .photo-swiper__link {
   display: block;
   width: 100%;
-  border-radius: 16px;
+  max-width: 100%;
+  border-radius: 14px;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
+}
+
+.photo-swiper-wrap--mobile .photo-slider-image {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.photo-swiper-nav {
+  position: absolute;
+  top: calc(50% - 1.1rem);
+  z-index: 5;
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 250, 243, 0.28);
+  background: rgba(16, 12, 9, 0.72);
+  color: #fffaf3;
+  font-size: 1.55rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.photo-swiper-nav--prev {
+  left: 0.15rem;
+}
+
+.photo-swiper-nav--next {
+  right: 0.15rem;
+}
+
+.photo-swiper-nav:active {
+  background: rgba(var(--color-primary-rgb), 0.35);
+  border-color: rgba(var(--color-primary-rgb), 0.55);
 }
 
 .photo-swiper-wrap--mobile .swiper-pagination {
@@ -2833,12 +2979,6 @@
   .photo-slider-image {
     aspect-ratio: 3 / 4;
     border-radius: 14px;
-  }
-
-  /* Hide leftover desktop arrows if any */
-  .photo-swiper-wrap--mobile .swiper-button-prev,
-  .photo-swiper-wrap--mobile .swiper-button-next {
-    display: none !important;
   }
 }
 
